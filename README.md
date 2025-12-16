@@ -1,76 +1,76 @@
-# ai-chat
+# ai-chat 
 
-FastAPI + Postgres + SQLAlchemy scaffold using Poetry and Docker Compose.
 
-## Database Models
+<!--
+This section provides instructions for installing the necessary components or dependencies for the project. Follow the steps outlined below to set up the project on your local machine.
+-->
+### Installation
 
-### Threads Model
+Follow these steps to set up the project on your local machine:
 
-The `Thread` model represents chat threads with the following fields:
+1. Clone the repository:
+    ```sh
+    git clone https://github.com/OpenPecha/ai-chat
+    ```
+2. Navigate to the project directory:
+    ```sh
+    cd chat_api
+    ```
+3. Install the dependencies:
+    ```sh
+    poetry install
+    ```
 
-- `id`: UUID (primary key, auto-generated)
-- `email`: String (user email)
-- `created_at`: DateTime (automatically set on creation)
-- `updated_at`: DateTime (automatically updated on modification)
-- `is_deleted`: Boolean (soft delete flag, defaults to False)
-- `platform`: Enum (sherab, webuddhist, webuddhist-app)
+### Database Setup
 
-## Database Migrations
+1. Navigate to the local setup directory:
+    ```sh
+    cd local_setup
+    ```
+2. Start the database using Docker:
+    ```sh
+    docker-compose up -d
+    ```
+3. Apply database migrations:
+    ```sh
+    poetry run alembic upgrade head
+    ```
 
-This project uses Alembic for database migrations.
+### Running the Application
 
-### Running Migrations
+1. Start the FastAPI development server:
+    ```sh
+    poetry run uvicorn chat_api.app:api --reload
+    ```
 
-To apply all pending migrations to your database:
+The application will be available at `http://127.0.0.1:8000/`.
 
-```bash
-poetry run alembic upgrade head
-```
+### API Documentation
 
-### Creating New Migrations
+You can access the Swagger UI for the API documentation at `http://127.0.0.1:8000/docs`.  ```sh
+    poetry install
+    ```
 
-After modifying models in `chat_api/db/models.py`, generate a new migration:
+### Alembic Commands
 
-```bash
-poetry run alembic revision --autogenerate -m "description_of_changes"
-```
-
-### Viewing Migration History
-
-```bash
-poetry run alembic history
-```
-
-### Rolling Back Migrations
-
-To rollback the last migration:
-
-```bash
-poetry run alembic downgrade -1
-```
-
-To rollback to a specific revision:
-
-```bash
-poetry run alembic downgrade <revision_id>
-```
-
-## Usage Example
-
-```python
-from chat_api.db import SessionLocal, Thread, PlatformEnum
-import uuid
-
-# Create a new thread
-with SessionLocal() as session:
-    new_thread = Thread(
-        id=uuid.uuid4(),
-        email="user@example.com",
-        platform=PlatformEnum.sherab
-    )
-    session.add(new_thread)
-    session.commit()
-    
-    # Query threads
-    threads = session.query(Thread).filter(Thread.is_deleted == False).all()
-```
+Alembic is used for handling database migrations. Here are some common commands:
+1. Create a new migration:
+    ```sh
+    poetry run alembic revision --autogenerate -m "description of migration"
+    ```
+2. Apply the latest migrations:
+    ```sh
+    poetry run alembic upgrade head
+    ```
+3. Downgrade to a previous migration:
+    ```sh
+    poetry run alembic downgrade -1
+    ```
+4. View the current migration history:
+    ```sh
+    poetry run alembic history
+    ```
+5. Show the current migration state:
+    ```sh
+    poetry run alembic current
+    ```
