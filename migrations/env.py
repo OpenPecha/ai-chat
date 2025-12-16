@@ -17,7 +17,6 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from chat_api.db.db import Base
-from chat_api.db.models import Thread  # noqa: F401
 
 target_metadata = Base.metadata
 
