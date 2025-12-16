@@ -4,6 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import Column, String, DateTime, Boolean, Enum
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from chat_api.db.db import Base
 
@@ -23,3 +24,5 @@ class Thread(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
     platform = Column(Enum(Platform), nullable=False)
+
+    chats = relationship("Chat", back_populates="thread")
