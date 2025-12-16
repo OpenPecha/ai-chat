@@ -13,7 +13,7 @@ services:
         max-size: 10m
         max-file: "3"
     ports:
-      - "5435:5433"
+      - "5435:5432"
     volumes:
       - ./data/database-chat-local:/var/lib/postgresql/data
 
