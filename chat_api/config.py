@@ -1,10 +1,8 @@
 import os
 
 DEFAULT = dict(
-    app_name="ai-chat",
-    database_url="postgresql://admin:chatAdmin@localhost:5434/ai_chat",
-    db_echo=False,
-    db_create_all=False,
+    APP_NAME="ai-chat",
+    DATABASE_URL="postgresql://admin:chatAdmin@localhost:5434/ai_chat"
 )
 
 def get(key: str) -> str:
