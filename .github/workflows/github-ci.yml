@@ -39,7 +39,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.CHAT_REPO_SECRET }}
+          password: ${{ secrets.ADMIN_GITHUB_TOKEN }}
       - name: Set image name and tag
         id: set-tag
         run: |
