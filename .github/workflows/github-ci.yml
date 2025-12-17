@@ -43,8 +43,8 @@ jobs:
       - name: Set image name and tag
         id: set-tag
         run: |
-          echo "IMAGE_NAME=atChat" >> $GITHUB_ENV
-          echo "image_name=atChat" >> $GITHUB_OUTPUT
+          echo "IMAGE_NAME=at_chat" >> $GITHUB_ENV
+          echo "image_name=at_chat" >> $GITHUB_OUTPUT
           
           if [[ -n "${{ github.ref }}" && "${{ github.ref }}" =~ ^refs/tags/ ]]; then
             tagNumber=$(echo "${{ github.ref }}" | sed 's#refs/tags/##')
