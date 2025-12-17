@@ -23,6 +23,6 @@ class Thread(Base):
     is_deleted = Column(Boolean, default=False, nullable=False)
     device_type = Column(Enum(DeviceType), nullable=False)
     application_id = Column(UUID(as_uuid=True), ForeignKey("applications.id"))
+    
     application = relationship("Application", back_populates="threads")
-
     chats = relationship("Chat", back_populates="thread")
