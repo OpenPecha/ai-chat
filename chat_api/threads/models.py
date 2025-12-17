@@ -2,18 +2,17 @@ import uuid
 import enum
 from datetime import datetime
 
-from sqlalchemy import Column, String, DateTime, Boolean, Enum
+from sqlalchemy import Column, ForeignKey, String, DateTime, Boolean, Enum
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import foreign, relationship
 
 from chat_api.db.db import Base
 
 
-class Platform(enum.Enum):
-    sherab = "sherab"
-    webuddhist = "webuddhist"
-    webuddhist_app = "webuddhist-app"
-
+class DeviceType(enum.Enum):
+    web = "web"
+    mobile_app = "mobile_app"
+    
 
 class Thread(Base):
     __tablename__ = "threads"
@@ -23,6 +22,7 @@ class Thread(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
-    platform = Column(Enum(Platform), nullable=False)
+    device_type = Column(Enum(DeviceType), nullable=False)
+    application_id = Column(UUID(as_uuid=True), ForeignKey="application_id")
 
     chats = relationship("Chat", back_populates="thread")
