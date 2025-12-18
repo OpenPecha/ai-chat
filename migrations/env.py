@@ -23,6 +23,9 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from chat_api.db.db import Base
+# Import all models so they're registered with Base.metadata
+from chat_api.threads.models import Thread
+from chat_api.chats.models import Chat
 
 target_metadata = Base.metadata
 
