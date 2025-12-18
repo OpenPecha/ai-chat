@@ -15,10 +15,10 @@ asyncpg = "^0.30.0"
 alembic = "^1.14.0"
 pydantic-settings = "^2.6.1"
 psycopg2-binary = "^2.9.9"
+httpx = "^0.28.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
-httpx = "^0.28.1"
 ruff = "^0.8.4"
 
 [tool.ruff]

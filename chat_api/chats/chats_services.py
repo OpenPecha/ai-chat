@@ -1,7 +1,7 @@
 from chat_api.config import get
-import requests
+import httpx
 
-def get_chat_stream(email: str, query: str):
+async def get_chat_stream(email: str, query: str):
     input_data = {
         "messages": [
           {
@@ -12,9 +12,10 @@ def get_chat_stream(email: str, query: str):
     }
 
     url = get("OPENPECHA_AI_URL")
-    response = requests.post(url, json=input_data, stream=True)
-
-    # Stream the response chunks
-    for chunk in response.iter_content(chunk_size=None):
-        if chunk:
-            yield chunk
+    
+    async with httpx.AsyncClient() as client:
+        async with client.stream("POST", url, json=input_data) as response:
+            # Stream the response chunks
+            async for chunk in response.aiter_bytes():
+                if chunk:
+                    yield chunk
