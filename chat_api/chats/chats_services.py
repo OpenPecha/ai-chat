@@ -1,8 +1,13 @@
 from chat_api.config import get
 import httpx
 from chat_api.chats.chats_reponse_model import ChatRequest, ChatUserQuery, chatRequestPayload
+from chat_api.error_contant import ErrorConstant
 
 async def get_chat_stream(email: str, query: str):
+    max_query_length = get("MAX_QUERY_LENGTH")
+    if len(query) > int(max_query_length):
+        raise ValueError(ErrorConstant.MAX_QUERY_LENGTH_ERROR)
+    
     user_query = ChatUserQuery(role="user", content=query)
     chat_request_payload = chatRequestPayload(messages=[user_query]).model_dump()
     url = get("OPENPECHA_AI_URL")
