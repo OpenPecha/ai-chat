@@ -4,6 +4,8 @@ from typing import List, Optional
 class ChatRequest(BaseModel):
     email: str
     query: str
+    application: str
+    device_type: str
 
 class ChatUserQuery(BaseModel):
     role: str
