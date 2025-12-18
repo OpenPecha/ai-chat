@@ -15,7 +15,7 @@ chats_router = APIRouter(
 )
 
 @chats_router.post("")
-async def get_chats(chat_request: ChatRequest):
+async def get_chats(chat_request: ChatRequest) -> StreamingResponse:
 
     max_query_length = get("MAX_QUERY_LENGTH")
     if len(chat_request.query) > int(max_query_length):
