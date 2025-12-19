@@ -26,6 +26,7 @@ from chat_api.db.db import Base
 # Import all models so they're registered with Base.metadata
 from chat_api.threads.models import Thread
 from chat_api.chats.models import Chat
+from chat_api.applications.models import Application
 
 target_metadata = Base.metadata
 
