@@ -38,7 +38,6 @@ async def get_chat_stream(chat_request: ChatRequest):
                 with SessionLocal() as db_session:
                     response_payload = ChatResponsePayload(thread_id=thread_id, response=chat_list, question=chat_request.query)
                     save_chat(db_session, response_payload=response_payload)
-             # send final SSE event (instead of raw JSON)
 
         yield (
             f"data: {json.dumps({'thread_id': str(thread_id)})}\n\n"
@@ -46,7 +45,7 @@ async def get_chat_stream(chat_request: ChatRequest):
 
 def sse_frame_from_line(
     line: str,
-    on_json: list[dict] = None,
+    on_json: list[dict] = [],
 ) -> Optional[bytes]:
 
     if not line:
@@ -60,12 +59,6 @@ def sse_frame_from_line(
         return (line + "\n\n").encode("utf-8")
 
     payload = line[len("data:") :].strip() if line.startswith("data:") else line
-
-    if on_json is not None:
-        try:
-            on_json(json.loads(payload))
-        except json.JSONDecodeError:
-            pass
-
+    on_json(json.loads(payload))
     return (f"data: {payload}\n\n").encode("utf-8")
     
