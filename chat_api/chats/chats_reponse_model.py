@@ -12,6 +12,11 @@ class ChatUserQuery(BaseModel):
     role: str
     content: str
 
+class ChatResponsePayload(BaseModel):
+    thread_id: str
+    response: list
+    question: str
+
 class chatRequestPayload(BaseModel):
     messages: List[ChatUserQuery]
 
