@@ -1,6 +1,7 @@
 from chat_api.config import get
 import httpx
 import json
+from typing import Optional
 
 from chat_api.chats.chats_reponse_model import ChatRequest, ChatUserQuery, chatRequestPayload, ChatResponsePayload
 from chat_api.error_contant import ErrorConstant,ResponseError
@@ -23,14 +24,10 @@ async def get_chat_stream(chat_request: ChatRequest):
     async with httpx.AsyncClient(timeout=httpx.Timeout(60.0, read=120.0)) as client:
         async with client.stream("POST", url, json=chat_request_payload) as response:
             # Stream the response chunks
-            async for chunk in response.aiter_lines():
-                if chunk:
-                    stripped_chunk = chunk[len("data:"):].strip()
-                    obj = json.loads(stripped_chunk)
-                    if obj is not None:
-                        chat_list.append(obj)
-                    yield chunk
-
+            async for line in response.aiter_lines():
+                frame = sse_frame_from_line(line, on_json=chat_list.append)
+                if frame:
+                    yield frame    
         
             if len(chat_list) > 0:
                 if chat_request.thread_id is None:
@@ -38,9 +35,37 @@ async def get_chat_stream(chat_request: ChatRequest):
                     thread = create_thread(thread_request=thread_request)
 
                 thread_id = chat_request.thread_id if chat_request.thread_id else thread.id
+                with SessionLocal() as db_session:
+                    response_payload = ChatResponsePayload(thread_id=thread_id, response=chat_list, question=chat_request.query)
+                    save_chat(db_session, response_payload=response_payload)
+             # send final SSE event (instead of raw JSON)
 
-                response_payload = ChatResponsePayload(thread_id=thread_id, response=chat_list, question=chat_request.query)
-                await save_chat(response_payload=response_payload)
-            yield json.dumps({"thread_id": "hello this is thread id"})
-    
+        yield (
+            f"data: {json.dumps({'thread_id': str(thread_id)})}\n\n"
+        ).encode("utf-8")
+
+def sse_frame_from_line(
+    line: str,
+    on_json: list[dict] = None,
+) -> Optional[bytes]:
+
+    if not line:
+        return None
+
+    line = line.strip()
+    if not line:
+        return None
+
+    if line.startswith(":"):
+        return (line + "\n\n").encode("utf-8")
+
+    payload = line[len("data:") :].strip() if line.startswith("data:") else line
+
+    if on_json is not None:
+        try:
+            on_json(json.loads(payload))
+        except json.JSONDecodeError:
+            pass
+
+    return (f"data: {payload}\n\n").encode("utf-8")
     

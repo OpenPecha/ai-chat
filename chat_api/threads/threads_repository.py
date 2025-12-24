@@ -10,12 +10,14 @@ from chat_api.threads.threads_request_model import ThreadCreateRequest, ThreadCr
 
 def create_thread(db: Session, application_id: UUID, thread_request: ThreadCreateRequest) -> Thread:
 
-    thread = ThreadCreatePayload(
+    thread = Thread(
         email=thread_request.email,
         device_type=thread_request.device_type,
-        application_id=application_id,
+        application_id=application_id
     )
     db.add(thread)
+    db.commit()
+    db.refresh(thread)
     return thread
 
 

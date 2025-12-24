@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from uuid import UUID
 
 class ChatRequest(BaseModel):
     email: str
@@ -13,7 +14,7 @@ class ChatUserQuery(BaseModel):
     content: str
 
 class ChatResponsePayload(BaseModel):
-    thread_id: str
+    thread_id: UUID
     response: list
     question: str
 
