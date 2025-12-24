@@ -1,0 +1,27 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from chat_api.threads.models import DeviceType
+
+
+class ThreadCreateRequest(BaseModel):
+    email: str = Field(min_length=1)
+    device_type: DeviceType
+    # Matches the existing `ChatRequest.application: str` shape; we store it via `applications.name`.
+    application: Optional[str] = Field(default=None, min_length=1)
+
+
+class ThreadResponse(BaseModel):
+    id: str
+    email: str
+    device_type: DeviceType
+    application_id: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    is_deleted: bool
+
+

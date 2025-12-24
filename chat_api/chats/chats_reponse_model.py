@@ -6,6 +6,7 @@ class ChatRequest(BaseModel):
     query: str
     application: str
     device_type: str
+    thread_id: Optional[str] = None
 
 class ChatUserQuery(BaseModel):
     role: str
