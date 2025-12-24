@@ -29,3 +29,19 @@ class ThreadResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ThreadSummary(BaseModel):
+    id: str
+    title: str
+
+    class Config:
+        from_attributes = True
+
+
+class ThreadsListResponse(BaseModel):
+    data: List[ThreadSummary]
+    total: int
+
+    class Config:
+        from_attributes = True

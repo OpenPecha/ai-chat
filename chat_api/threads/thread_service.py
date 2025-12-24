@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from fastapi import HTTPException
 
 from chat_api.threads.thread_repository import ThreadRepository
@@ -10,6 +10,30 @@ from chat_api.chats.models import Chat
 class ThreadService:
     def __init__(self, repository: ThreadRepository):
         self.repository = repository
+
+    def get_all_threads(
+        self, 
+        email: Optional[str] = None, 
+        application: Optional[str] = None,
+        skip: int = 0, 
+        limit: int = 10
+    ) -> Dict[str, Any]:
+
+        threads, total = self.repository.get_threads(email, application, skip, limit)
+        
+        thread_data = []
+        for thread in threads:
+            title = thread.chats[0].question if thread.chats else "Untitled Thread"
+            
+            thread_data.append({
+                "id": str(thread.id),
+                "title": title
+            })
+        
+        return {
+            "data": thread_data,
+            "total": total
+        }
 
     def get_thread_by_id(self, thread_id: UUID) -> ThreadResponse:
         thread = self.repository.get_thread_by_id(thread_id)
