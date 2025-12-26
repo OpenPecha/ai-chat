@@ -86,5 +86,5 @@ def downgrade() -> None:
 
     device_type_enum = postgresql.ENUM('web', 'mobile_app', name='devicetype')
     device_type_enum.drop(op.get_bind(), checkfirst=True)
-    # ### end Alembic commands ###
+    # ### end Alembic commands ### 
 
