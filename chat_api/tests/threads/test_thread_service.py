@@ -158,6 +158,148 @@ class TestGetThreadById:
         assert result.messages[3].content == "Second answer"
 
 
+class TestGetAllThreads:
+    """Tests for the get_all_threads method."""
+    
+    def test_get_all_threads_no_filters(self, thread_service, mock_repository):
+        """Test getting all threads without filters."""
+        thread1 = Mock(spec=Thread)
+        thread1.id = uuid4()
+        chat1 = Mock(spec=Chat)
+        chat1.question = "Thread 1 Question"
+        thread1.chats = [chat1]
+        
+        thread2 = Mock(spec=Thread)
+        thread2.id = uuid4()
+        chat2 = Mock(spec=Chat)
+        chat2.question = "Thread 2 Question"
+        thread2.chats = [chat2]
+        
+        mock_repository.get_threads.return_value = ([thread1, thread2], 2)
+        
+        result = thread_service.get_all_threads()
+        
+        assert result["total"] == 2
+        assert len(result["data"]) == 2
+        assert result["data"][0]["id"] == str(thread1.id)
+        assert result["data"][0]["title"] == "Thread 1 Question"
+        assert result["data"][1]["id"] == str(thread2.id)
+        assert result["data"][1]["title"] == "Thread 2 Question"
+        mock_repository.get_threads.assert_called_once_with(None, None, 0, 10)
+    
+    def test_get_all_threads_with_email_filter(self, thread_service, mock_repository):
+        """Test getting threads filtered by email."""
+        thread = Mock(spec=Thread)
+        thread.id = uuid4()
+        chat = Mock(spec=Chat)
+        chat.question = "Test Question"
+        thread.chats = [chat]
+        
+        mock_repository.get_threads.return_value = ([thread], 1)
+        
+        result = thread_service.get_all_threads(email="test@example.com")
+        
+        assert result["total"] == 1
+        assert len(result["data"]) == 1
+        mock_repository.get_threads.assert_called_once_with("test@example.com", None, 0, 10)
+    
+    def test_get_all_threads_with_application_filter(self, thread_service, mock_repository):
+        """Test getting threads filtered by application."""
+        thread = Mock(spec=Thread)
+        thread.id = uuid4()
+        chat = Mock(spec=Chat)
+        chat.question = "App Question"
+        thread.chats = [chat]
+        
+        mock_repository.get_threads.return_value = ([thread], 1)
+        
+        result = thread_service.get_all_threads(application="my-app")
+        
+        assert result["total"] == 1
+        assert len(result["data"]) == 1
+        mock_repository.get_threads.assert_called_once_with(None, "my-app", 0, 10)
+    
+    def test_get_all_threads_with_pagination(self, thread_service, mock_repository):
+        """Test getting threads with pagination parameters."""
+        mock_repository.get_threads.return_value = ([], 50)
+        
+        result = thread_service.get_all_threads(skip=10, limit=20)
+        
+        assert result["total"] == 50
+        assert len(result["data"]) == 0
+        mock_repository.get_threads.assert_called_once_with(None, None, 10, 20)
+    
+    def test_get_all_threads_with_all_filters(self, thread_service, mock_repository):
+        """Test getting threads with all filters applied."""
+        thread = Mock(spec=Thread)
+        thread.id = uuid4()
+        chat = Mock(spec=Chat)
+        chat.question = "Filtered Question"
+        thread.chats = [chat]
+        
+        mock_repository.get_threads.return_value = ([thread], 1)
+        
+        result = thread_service.get_all_threads(
+            email="user@test.com",
+            application="test-app",
+            skip=5,
+            limit=15
+        )
+        
+        assert result["total"] == 1
+        assert len(result["data"]) == 1
+        mock_repository.get_threads.assert_called_once_with("user@test.com", "test-app", 5, 15)
+    
+    def test_get_all_threads_empty_result(self, thread_service, mock_repository):
+        """Test getting threads when no threads exist."""
+        mock_repository.get_threads.return_value = ([], 0)
+        
+        result = thread_service.get_all_threads()
+        
+        assert result["total"] == 0
+        assert len(result["data"]) == 0
+    
+    def test_get_all_threads_with_empty_chats(self, thread_service, mock_repository):
+        """Test getting threads where some threads have no chats."""
+        thread1 = Mock(spec=Thread)
+        thread1.id = uuid4()
+        thread1.chats = []
+        
+        thread2 = Mock(spec=Thread)
+        thread2.id = uuid4()
+        chat = Mock(spec=Chat)
+        chat.question = "Has Question"
+        thread2.chats = [chat]
+        
+        mock_repository.get_threads.return_value = ([thread1, thread2], 2)
+        
+        result = thread_service.get_all_threads()
+        
+        assert result["total"] == 2
+        assert len(result["data"]) == 2
+        assert result["data"][0]["title"] == "Untitled Thread"
+        assert result["data"][1]["title"] == "Has Question"
+    
+    def test_get_all_threads_returns_correct_structure(self, thread_service, mock_repository):
+        """Test that get_all_threads returns the correct data structure."""
+        thread = Mock(spec=Thread)
+        thread.id = uuid4()
+        chat = Mock(spec=Chat)
+        chat.question = "Test"
+        thread.chats = [chat]
+        
+        mock_repository.get_threads.return_value = ([thread], 1)
+        
+        result = thread_service.get_all_threads()
+        
+        assert "data" in result
+        assert "total" in result
+        assert isinstance(result["data"], list)
+        assert isinstance(result["total"], int)
+        assert "id" in result["data"][0]
+        assert "title" in result["data"][0]
+
+
 class TestTransformChatsToMessages:
     """Tests for the transform_chats_to_messages method."""
     
