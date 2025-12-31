@@ -41,7 +41,32 @@ class ThreadService:
             )
             messages.append(user_message)
             
-            if isinstance(chat.response, dict):
+            if isinstance(chat.response, list):
+                answer = ""
+                search_results = None
+                
+                for item in chat.response:
+                    if item.get("type") == "token":
+                        answer = item.get("data", "")
+                    elif item.get("type") == "search_results":
+                        search_results_data = item.get("data", [])
+                        search_results = [
+                            SearchResult(
+                                id=sr.get("id", ""),
+                                title=sr.get("title", ""),
+                                text=sr.get("text", "")
+                            )
+                            for sr in search_results_data
+                        ] if search_results_data else None
+                
+                assistant_message = Message(
+                    role="assistant",
+                    content=answer,
+                    id=chat.id,
+                    searchResults=search_results
+                )
+                messages.append(assistant_message)
+            elif isinstance(chat.response, dict):
                 answer = chat.response.get("answer", "")
                 search_results_data = chat.response.get("search_results", [])
                 
