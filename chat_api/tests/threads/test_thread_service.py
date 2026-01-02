@@ -298,6 +298,33 @@ class TestGetAllThreads:
         assert isinstance(result["total"], int)
         assert "id" in result["data"][0]
         assert "title" in result["data"][0]
+    
+    def test_get_all_threads_uses_first_chronological_chat_for_title(self, thread_service, mock_repository):
+        """Test that get_all_threads uses the first chat chronologically for the title."""
+        thread = Mock(spec=Thread)
+        thread.id = uuid4()
+        
+        chat1 = Mock(spec=Chat)
+        chat1.question = "Third question (latest)"
+        chat1.created_at = datetime(2024, 1, 1, 12, 0, 0)
+        
+        chat2 = Mock(spec=Chat)
+        chat2.question = "First question (earliest)"
+        chat2.created_at = datetime(2024, 1, 1, 10, 0, 0)
+        
+        chat3 = Mock(spec=Chat)
+        chat3.question = "Second question (middle)"
+        chat3.created_at = datetime(2024, 1, 1, 11, 0, 0)
+        
+        # Add chats in non-chronological order
+        thread.chats = [chat1, chat2, chat3]
+        
+        mock_repository.get_threads.return_value = ([thread], 1)
+        
+        result = thread_service.get_all_threads()
+        
+        # Should use the earliest chat's question as title
+        assert result["data"][0]["title"] == "First question (earliest)"
 
 
 class TestTransformChatsToMessages:
