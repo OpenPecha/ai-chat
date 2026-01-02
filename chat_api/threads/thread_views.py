@@ -38,3 +38,9 @@ def get_all_threads(
     repository = ThreadRepository(db)
     service = ThreadService(repository)
     return service.get_all_threads(email=email, application=application, skip=skip, limit=limit)
+
+@thread_router.delete("/threads/{thread_id}")
+def delete_thread(thread_id: UUID, db: Session = Depends(get_db)):
+    repository = ThreadRepository(db)
+    service = ThreadService(repository)
+    return service.delete_thread_by_id(thread_id)

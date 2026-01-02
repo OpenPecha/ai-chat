@@ -524,3 +524,38 @@ class TestTransformChatsToMessages:
         assert result[3].content == "Question 3"
         assert result[4].content == "Answer 3"
         assert result[4].searchResults is not None
+
+
+class TestDeleteThreadById:
+    """Tests for the delete_thread_by_id method."""
+    
+    def test_delete_thread_success(self, thread_service, mock_repository, sample_thread_id):
+        """Test successfully soft deleting a thread."""
+        mock_repository.soft_delete_thread.return_value = True
+        
+        result = thread_service.delete_thread_by_id(sample_thread_id)
+        
+        assert result["message"] == "Thread deleted successfully"
+        assert result["thread_id"] == str(sample_thread_id)
+        mock_repository.soft_delete_thread.assert_called_once_with(sample_thread_id)
+    
+    def test_delete_thread_not_found(self, thread_service, mock_repository, sample_thread_id):
+        """Test deleting a non-existent thread raises HTTPException."""
+        mock_repository.soft_delete_thread.return_value = False
+        
+        with pytest.raises(HTTPException) as exc_info:
+            thread_service.delete_thread_by_id(sample_thread_id)
+        
+        assert exc_info.value.status_code == 404
+        assert exc_info.value.detail == "Thread not found or already deleted"
+        mock_repository.soft_delete_thread.assert_called_once_with(sample_thread_id)
+    
+    def test_delete_already_deleted_thread(self, thread_service, mock_repository, sample_thread_id):
+        """Test deleting an already deleted thread raises HTTPException."""
+        mock_repository.soft_delete_thread.return_value = False
+        
+        with pytest.raises(HTTPException) as exc_info:
+            thread_service.delete_thread_by_id(sample_thread_id)
+        
+        assert exc_info.value.status_code == 404
+        assert exc_info.value.detail == "Thread not found or already deleted"
