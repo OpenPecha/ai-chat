@@ -63,3 +63,11 @@ class ThreadService:
                 messages.append(assistant_message)
         
         return messages
+
+    def delete_thread_by_id(self, thread_id: UUID) -> dict:
+        deleted = self.repository.soft_delete_thread(thread_id)
+        
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Thread not found or already deleted")
+        
+        return {"message": "Thread deleted successfully", "thread_id": str(thread_id)}
