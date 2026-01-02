@@ -23,7 +23,11 @@ class ThreadService:
         
         thread_data = []
         for thread in threads:
-            title = thread.chats[0].question if thread.chats else "Untitled Thread"
+            if thread.chats:
+                first_chat = min(thread.chats, key=lambda chat: chat.created_at)
+                title = first_chat.question
+            else:
+                title = "Untitled Thread"
             
             thread_data.append({
                 "id": str(thread.id),
