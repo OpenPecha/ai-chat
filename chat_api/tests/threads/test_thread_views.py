@@ -338,3 +338,127 @@ class TestThreadRouter:
         
         assert get_thread_route is not None
         assert 'GET' in get_thread_route.methods
+
+
+class TestDeleteThread:
+    """Tests for the delete_thread endpoint."""
+    
+    def test_delete_thread_success(self, client, mock_db, sample_thread_id):
+        """Test successfully deleting a thread."""
+        def override_get_db():
+            yield mock_db
+        
+        client.app.dependency_overrides[get_db] = override_get_db
+        
+        with patch('chat_api.threads.thread_views.ThreadRepository') as mock_repo_class, \
+             patch('chat_api.threads.thread_views.ThreadService') as mock_service_class:
+            
+            mock_repo = Mock()
+            mock_service = Mock()
+            mock_repo_class.return_value = mock_repo
+            mock_service_class.return_value = mock_service
+            mock_service.delete_thread_by_id.return_value = {
+                "message": "Thread deleted successfully",
+                "thread_id": str(sample_thread_id)
+            }
+            
+            response = client.delete(f"/threads/{sample_thread_id}")
+            
+            assert response.status_code == 200
+            data = response.json()
+            assert data["message"] == "Thread deleted successfully"
+            assert data["thread_id"] == str(sample_thread_id)
+            
+            mock_repo_class.assert_called_once_with(mock_db)
+            mock_service_class.assert_called_once_with(mock_repo)
+            mock_service.delete_thread_by_id.assert_called_once_with(sample_thread_id)
+        
+        client.app.dependency_overrides.clear()
+    
+    def test_delete_thread_not_found(self, client, mock_db):
+        """Test deleting a non-existent thread."""
+        thread_id = uuid4()
+        
+        def override_get_db():
+            yield mock_db
+        
+        client.app.dependency_overrides[get_db] = override_get_db
+        
+        with patch('chat_api.threads.thread_views.ThreadRepository') as mock_repo_class, \
+             patch('chat_api.threads.thread_views.ThreadService') as mock_service_class:
+            
+            from fastapi import HTTPException
+            
+            mock_repo = Mock()
+            mock_service = Mock()
+            mock_repo_class.return_value = mock_repo
+            mock_service_class.return_value = mock_service
+            mock_service.delete_thread_by_id.side_effect = HTTPException(
+                status_code=404,
+                detail="Thread not found or already deleted"
+            )
+            
+            response = client.delete(f"/threads/{thread_id}")
+            
+            assert response.status_code == 404
+            assert response.json()["detail"] == "Thread not found or already deleted"
+        
+        client.app.dependency_overrides.clear()
+    
+    def test_delete_thread_invalid_uuid(self, client, mock_db):
+        """Test deleting a thread with an invalid UUID."""
+        invalid_id = "not-a-uuid"
+        
+        def override_get_db():
+            yield mock_db
+        
+        client.app.dependency_overrides[get_db] = override_get_db
+        
+        response = client.delete(f"/threads/{invalid_id}")
+        
+        assert response.status_code == 422
+        
+        client.app.dependency_overrides.clear()
+    
+    def test_delete_already_deleted_thread(self, client, mock_db, sample_thread_id):
+        """Test deleting an already deleted thread."""
+        def override_get_db():
+            yield mock_db
+        
+        client.app.dependency_overrides[get_db] = override_get_db
+        
+        with patch('chat_api.threads.thread_views.ThreadRepository') as mock_repo_class, \
+             patch('chat_api.threads.thread_views.ThreadService') as mock_service_class:
+            
+            from fastapi import HTTPException
+            
+            mock_repo = Mock()
+            mock_service = Mock()
+            mock_repo_class.return_value = mock_repo
+            mock_service_class.return_value = mock_service
+            mock_service.delete_thread_by_id.side_effect = HTTPException(
+                status_code=404,
+                detail="Thread not found or already deleted"
+            )
+            
+            response = client.delete(f"/threads/{sample_thread_id}")
+            
+            assert response.status_code == 404
+            assert response.json()["detail"] == "Thread not found or already deleted"
+        
+        client.app.dependency_overrides.clear()
+    
+    def test_delete_thread_route_registered(self):
+        """Test that the delete_thread route is registered."""
+        from chat_api.threads.thread_views import thread_router
+        
+        routes = [route for route in thread_router.routes]
+        
+        delete_thread_route = None
+        for route in routes:
+            if hasattr(route, 'path') and '/threads/{thread_id}' in route.path:
+                if hasattr(route, 'methods') and 'DELETE' in route.methods:
+                    delete_thread_route = route
+                    break
+        
+        assert delete_thread_route is not None
