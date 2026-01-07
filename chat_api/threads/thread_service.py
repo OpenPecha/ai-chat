@@ -5,7 +5,7 @@ from starlette import status
 
 from chat_api.db.db import SessionLocal
 from chat_api.threads.thread_repository import ThreadRepository
-from chat_api.threads.thread_response_model import ThreadResponse, Message, SearchResult, ThreadsListResponse
+from chat_api.threads.thread_response_model import ThreadResponse, Message, SearchResult, ThreadListResponse
 from chat_api.threads.models import Thread
 from chat_api.chats.models import Chat
 
@@ -15,7 +15,7 @@ async def get_all_threads(
     application: Optional[str] = None,
     skip: int = 0, 
     limit: int = 10
-) -> ThreadsListResponse:
+) -> ThreadListResponse:
 
     with SessionLocal() as db:
         repository = ThreadRepository(db)
@@ -29,7 +29,7 @@ async def get_all_threads(
                 "title": title
             })
         
-        return ThreadsListResponse(
+        return ThreadListResponse(
             data=thread_data,
             total=total
         )

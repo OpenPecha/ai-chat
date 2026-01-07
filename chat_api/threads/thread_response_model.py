@@ -39,7 +39,7 @@ class ThreadSummary(BaseModel):
         from_attributes = True
 
 
-class ThreadsListResponse(BaseModel):
+class ThreadListResponse(BaseModel):
     data: List[ThreadSummary]
     total: int
 
