@@ -7,7 +7,7 @@ import logging
 from chat_api.db.db import SessionLocal
 
 logger = logging.getLogger(__name__)
-from chat_api.threads.thread_repository import ThreadRepository
+from chat_api.threads import thread_repository
 from chat_api.threads.thread_response_model import ThreadResponse, Message, SearchResult, ThreadListResponse, ResponseError
 from chat_api.threads.thread_enums import MessageRole
 from chat_api.threads.models import Thread
@@ -23,8 +23,7 @@ async def get_all_threads(
 ) -> ThreadListResponse:
 
     with SessionLocal() as db:
-        repository = ThreadRepository(db)
-        threads, total = repository.get_threads(email, application, skip, limit)
+        threads, total = thread_repository.get_threads(db, email, application, skip, limit)
         
         thread_data = []
         for thread in threads:
@@ -42,8 +41,7 @@ async def get_all_threads(
 async def get_thread_by_id(thread_id: UUID) -> ThreadResponse:
 
     with SessionLocal() as db:
-        repository = ThreadRepository(db)
-        thread = repository.get_thread_by_id(thread_id)
+        thread = thread_repository.get_thread_by_id(db, thread_id)
         
         if not thread:
             raise HTTPException(
@@ -64,10 +62,9 @@ async def get_thread_by_id(thread_id: UUID) -> ThreadResponse:
 async def delete_thread_by_id(thread_id: UUID) -> None:
 
     with SessionLocal() as db:
-        repository = ThreadRepository(db)
-        deleted = repository.soft_delete_thread(thread_id)
+        deleted_thread = thread_repository.soft_delete_thread(db, thread_id)
         
-        if not deleted:
+        if not deleted_thread:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=ResponseError(error=BAD_REQUEST, message=THREAD_NOT_FOUND).model_dump()
