@@ -63,8 +63,7 @@ async def delete_thread_by_id(thread_id: UUID) -> None:
         
         if not deleted:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Thread not found or already deleted"
+                status_code=status.HTTP_404_NOT_FOUND
             )
 
 
