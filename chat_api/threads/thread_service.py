@@ -6,6 +6,7 @@ from starlette import status
 from chat_api.db.db import SessionLocal
 from chat_api.threads.thread_repository import ThreadRepository
 from chat_api.threads.thread_response_model import ThreadResponse, Message, SearchResult, ThreadListResponse, ResponseError
+from chat_api.threads.thread_enums import MessageRole
 from chat_api.threads.models import Thread
 from chat_api.chats.models import Chat
 from chat_api.response_message import THREAD_NOT_FOUND, BAD_REQUEST
@@ -84,7 +85,7 @@ def transform_chats_to_messages(chats: List[Chat]) -> List[Message]:
     
     for chat in sorted_chats:
         user_message = Message(
-            role="user",
+            role=MessageRole.USER,
             content=chat.question,
             id=chat.id,
             searchResults=None
@@ -93,22 +94,18 @@ def transform_chats_to_messages(chats: List[Chat]) -> List[Message]:
         
         if isinstance(chat.response, list):
             answer, search_results = parse_list_response(chat.response)
-            assistant_message = Message(
-                role="assistant",
-                content=answer,
-                id=chat.id,
-                searchResults=search_results
-            )
-            messages.append(assistant_message)
         elif isinstance(chat.response, dict):
             answer, search_results = parse_dict_response(chat.response)
-            assistant_message = Message(
-                role="assistant",
-                content=answer,
-                id=chat.id,
-                searchResults=search_results
-            )
-            messages.append(assistant_message)
+        else:
+            continue
+        
+        assistant_message = Message(
+            role=MessageRole.ASSISTANT,
+            content=answer,
+            id=chat.id,
+            searchResults=search_results
+        )
+        messages.append(assistant_message)
     
     return messages
 
