@@ -224,7 +224,6 @@ class TestGetThread:
             assert data["messages"][2]["content"] == "Second question"
             assert data["messages"][3]["content"] == "Second answer"
         
-        # Clean up
         client.app.dependency_overrides.clear()
     
     def test_get_thread_with_search_results(self, client, mock_db, sample_thread_id, sample_chat_id):
@@ -274,10 +273,8 @@ class TestGetThread:
 
 
 class TestGetDbDependency:
-    """Tests for the get_db dependency."""
     
     def test_get_db_yields_session(self):
-        """Test that get_db yields a database session."""
         with patch('chat_api.threads.thread_views.SessionLocal') as mock_session_local:
             mock_db = Mock()
             mock_session_local.return_value = mock_db
@@ -297,7 +294,6 @@ class TestGetDbDependency:
             mock_db.close.assert_called_once()
     
     def test_get_db_closes_session_on_exception(self):
-        """Test that get_db closes the session even if an exception occurs."""
         with patch('chat_api.threads.thread_views.SessionLocal') as mock_session_local:
             mock_db = Mock()
             mock_session_local.return_value = mock_db
@@ -314,17 +310,279 @@ class TestGetDbDependency:
             mock_db.close.assert_called_once()
 
 
+class TestGetAllThreads:
+    
+    def test_get_all_threads_no_filters(self, client, mock_db):
+        def override_get_db():
+            yield mock_db
+        
+        client.app.dependency_overrides[get_db] = override_get_db
+        
+        with patch('chat_api.threads.thread_views.ThreadRepository') as mock_repo_class, \
+             patch('chat_api.threads.thread_views.ThreadService') as mock_service_class:
+            
+            mock_repo = Mock()
+            mock_service = Mock()
+            mock_repo_class.return_value = mock_repo
+            mock_service_class.return_value = mock_service
+            mock_service.get_all_threads.return_value = {
+                "data": [
+                    {"id": str(uuid4()), "title": "Thread 1"},
+                    {"id": str(uuid4()), "title": "Thread 2"}
+                ],
+                "total": 2
+            }
+            
+            response = client.get("/threads")
+            
+            assert response.status_code == 200
+            data = response.json()
+            assert data["total"] == 2
+            assert len(data["data"]) == 2
+            assert data["data"][0]["title"] == "Thread 1"
+            assert data["data"][1]["title"] == "Thread 2"
+            
+            mock_service.get_all_threads.assert_called_once_with(
+                email=None,
+                application=None,
+                skip=0,
+                limit=10
+            )
+        
+        client.app.dependency_overrides.clear()
+    
+    def test_get_all_threads_with_email_filter(self, client, mock_db):
+        def override_get_db():
+            yield mock_db
+        
+        client.app.dependency_overrides[get_db] = override_get_db
+        
+        with patch('chat_api.threads.thread_views.ThreadRepository') as mock_repo_class, \
+             patch('chat_api.threads.thread_views.ThreadService') as mock_service_class:
+            
+            mock_repo = Mock()
+            mock_service = Mock()
+            mock_repo_class.return_value = mock_repo
+            mock_service_class.return_value = mock_service
+            mock_service.get_all_threads.return_value = {
+                "data": [{"id": str(uuid4()), "title": "User Thread"}],
+                "total": 1
+            }
+            
+            response = client.get("/threads?email=test@example.com")
+            
+            assert response.status_code == 200
+            data = response.json()
+            assert data["total"] == 1
+            
+            mock_service.get_all_threads.assert_called_once_with(
+                email="test@example.com",
+                application=None,
+                skip=0,
+                limit=10
+            )
+        
+        client.app.dependency_overrides.clear()
+    
+    def test_get_all_threads_with_application_filter(self, client, mock_db):
+        def override_get_db():
+            yield mock_db
+        
+        client.app.dependency_overrides[get_db] = override_get_db
+        
+        with patch('chat_api.threads.thread_views.ThreadRepository') as mock_repo_class, \
+             patch('chat_api.threads.thread_views.ThreadService') as mock_service_class:
+            
+            mock_repo = Mock()
+            mock_service = Mock()
+            mock_repo_class.return_value = mock_repo
+            mock_service_class.return_value = mock_service
+            mock_service.get_all_threads.return_value = {
+                "data": [{"id": str(uuid4()), "title": "App Thread"}],
+                "total": 1
+            }
+            
+            response = client.get("/threads?application=my-app")
+            
+            assert response.status_code == 200
+            data = response.json()
+            assert data["total"] == 1
+            
+            mock_service.get_all_threads.assert_called_once_with(
+                email=None,
+                application="my-app",
+                skip=0,
+                limit=10
+            )
+        
+        client.app.dependency_overrides.clear()
+    
+    def test_get_all_threads_with_pagination(self, client, mock_db):
+        def override_get_db():
+            yield mock_db
+        
+        client.app.dependency_overrides[get_db] = override_get_db
+        
+        with patch('chat_api.threads.thread_views.ThreadRepository') as mock_repo_class, \
+             patch('chat_api.threads.thread_views.ThreadService') as mock_service_class:
+            
+            mock_repo = Mock()
+            mock_service = Mock()
+            mock_repo_class.return_value = mock_repo
+            mock_service_class.return_value = mock_service
+            mock_service.get_all_threads.return_value = {
+                "data": [],
+                "total": 50
+            }
+            
+            response = client.get("/threads?skip=10&limit=20")
+            
+            assert response.status_code == 200
+            data = response.json()
+            assert data["total"] == 50
+            
+            mock_service.get_all_threads.assert_called_once_with(
+                email=None,
+                application=None,
+                skip=10,
+                limit=20
+            )
+        
+        client.app.dependency_overrides.clear()
+    
+    def test_get_all_threads_with_all_filters(self, client, mock_db):
+        def override_get_db():
+            yield mock_db
+        
+        client.app.dependency_overrides[get_db] = override_get_db
+        
+        with patch('chat_api.threads.thread_views.ThreadRepository') as mock_repo_class, \
+             patch('chat_api.threads.thread_views.ThreadService') as mock_service_class:
+            
+            mock_repo = Mock()
+            mock_service = Mock()
+            mock_repo_class.return_value = mock_repo
+            mock_service_class.return_value = mock_service
+            mock_service.get_all_threads.return_value = {
+                "data": [{"id": str(uuid4()), "title": "Filtered Thread"}],
+                "total": 1
+            }
+            
+            response = client.get("/threads?email=user@test.com&application=test-app&skip=5&limit=15")
+            
+            assert response.status_code == 200
+            data = response.json()
+            assert data["total"] == 1
+            
+            mock_service.get_all_threads.assert_called_once_with(
+                email="user@test.com",
+                application="test-app",
+                skip=5,
+                limit=15
+            )
+        
+        client.app.dependency_overrides.clear()
+    
+    def test_get_all_threads_empty_result(self, client, mock_db):
+        def override_get_db():
+            yield mock_db
+        
+        client.app.dependency_overrides[get_db] = override_get_db
+        
+        with patch('chat_api.threads.thread_views.ThreadRepository') as mock_repo_class, \
+             patch('chat_api.threads.thread_views.ThreadService') as mock_service_class:
+            
+            mock_repo = Mock()
+            mock_service = Mock()
+            mock_repo_class.return_value = mock_repo
+            mock_service_class.return_value = mock_service
+            mock_service.get_all_threads.return_value = {
+                "data": [],
+                "total": 0
+            }
+            
+            response = client.get("/threads")
+            
+            assert response.status_code == 200
+            data = response.json()
+            assert data["total"] == 0
+            assert len(data["data"]) == 0
+        
+        client.app.dependency_overrides.clear()
+    
+    def test_get_all_threads_response_structure(self, client, mock_db):
+        def override_get_db():
+            yield mock_db
+        
+        client.app.dependency_overrides[get_db] = override_get_db
+        
+        with patch('chat_api.threads.thread_views.ThreadRepository') as mock_repo_class, \
+             patch('chat_api.threads.thread_views.ThreadService') as mock_service_class:
+            
+            mock_repo = Mock()
+            mock_service = Mock()
+            mock_repo_class.return_value = mock_repo
+            mock_service_class.return_value = mock_service
+            mock_service.get_all_threads.return_value = {
+                "data": [
+                    {"id": str(uuid4()), "title": "Thread 1"}
+                ],
+                "total": 1
+            }
+            
+            response = client.get("/threads")
+            
+            assert response.status_code == 200
+            data = response.json()
+            assert "data" in data
+            assert "total" in data
+            assert isinstance(data["data"], list)
+            assert isinstance(data["total"], int)
+            assert "id" in data["data"][0]
+            assert "title" in data["data"][0]
+        
+        client.app.dependency_overrides.clear()
+    
+    def test_get_all_threads_default_pagination_values(self, client, mock_db):
+        def override_get_db():
+            yield mock_db
+        
+        client.app.dependency_overrides[get_db] = override_get_db
+        
+        with patch('chat_api.threads.thread_views.ThreadRepository') as mock_repo_class, \
+             patch('chat_api.threads.thread_views.ThreadService') as mock_service_class:
+            
+            mock_repo = Mock()
+            mock_service = Mock()
+            mock_repo_class.return_value = mock_repo
+            mock_service_class.return_value = mock_service
+            mock_service.get_all_threads.return_value = {
+                "data": [],
+                "total": 0
+            }
+            
+            response = client.get("/threads")
+            
+            assert response.status_code == 200
+            
+            mock_service.get_all_threads.assert_called_once_with(
+                email=None,
+                application=None,
+                skip=0,
+                limit=10
+            )
+        
+        client.app.dependency_overrides.clear()
+
+
 class TestThreadRouter:
-    """Tests for the thread router configuration."""
     
     def test_router_exists(self):
-        """Test that the thread router is properly configured."""
         from chat_api.threads.thread_views import thread_router
         assert thread_router is not None
         assert hasattr(thread_router, 'routes')
     
     def test_get_thread_route_registered(self):
-        """Test that the get_thread route is registered."""
         from chat_api.threads.thread_views import thread_router
         
         routes = [route for route in thread_router.routes]
@@ -338,3 +596,17 @@ class TestThreadRouter:
         
         assert get_thread_route is not None
         assert 'GET' in get_thread_route.methods
+    
+    def test_get_all_threads_route_registered(self):
+        from chat_api.threads.thread_views import thread_router
+        
+        routes = [route for route in thread_router.routes]
+        
+        get_all_threads_route = None
+        for route in routes:
+            if hasattr(route, 'path') and route.path == '/threads':
+                get_all_threads_route = route
+                break
+        
+        assert get_all_threads_route is not None
+        assert 'GET' in get_all_threads_route.methods
