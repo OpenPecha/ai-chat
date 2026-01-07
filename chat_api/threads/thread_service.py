@@ -8,15 +8,18 @@ from chat_api.threads.thread_repository import ThreadRepository
 from chat_api.threads.thread_response_model import ThreadResponse, Message, SearchResult, ThreadListResponse
 from chat_api.threads.models import Thread
 from chat_api.chats.models import Chat
+from chat_api.auth_utils import get_user_email_from_token
 
 
 async def get_all_threads(
+    token: str,
     email: str,
     application: str,
     skip: int = 0, 
     limit: int = 10
 ) -> ThreadListResponse:
-
+    get_user_email_from_token(token)
+    
     with SessionLocal() as db:
         repository = ThreadRepository(db)
         threads, total = repository.get_threads(email, application, skip, limit)
@@ -34,8 +37,9 @@ async def get_all_threads(
             total=total
         )
 
-async def get_thread_by_id(thread_id: UUID) -> ThreadResponse:
-
+async def get_thread_by_id(token: str, thread_id: UUID) -> ThreadResponse:
+    get_user_email_from_token(token)
+    
     with SessionLocal() as db:
         repository = ThreadRepository(db)
         thread = repository.get_thread_by_id(thread_id)
@@ -55,8 +59,9 @@ async def get_thread_by_id(thread_id: UUID) -> ThreadResponse:
             messages=messages
         )
 
-async def delete_thread_by_id(thread_id: UUID) -> None:
-
+async def delete_thread_by_id(token: str, thread_id: UUID) -> None:
+    get_user_email_from_token(token)
+    
     with SessionLocal() as db:
         repository = ThreadRepository(db)
         deleted = repository.soft_delete_thread(thread_id)
