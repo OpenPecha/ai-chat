@@ -73,7 +73,6 @@ async def delete_thread_by_id(thread_id: UUID) -> None:
                 detail=ResponseError(error=BAD_REQUEST, message=THREAD_NOT_FOUND).model_dump()
             )
 
-
 def extract_thread_title(thread: Thread) -> str:
 
     if thread.chats:
