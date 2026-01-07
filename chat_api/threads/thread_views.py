@@ -1,40 +1,38 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from uuid import UUID
-from sqlalchemy.orm import Session
 from typing import Optional
+from starlette import status
 
-from chat_api.db.db import SessionLocal
-from chat_api.threads.thread_repository import ThreadRepository
-from chat_api.threads.thread_service import ThreadService
+from chat_api.threads import thread_service
 from chat_api.threads.thread_response_model import ThreadResponse, ThreadsListResponse
 
-
-thread_router = APIRouter()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+thread_router = APIRouter(
+    prefix="/threads",
+    tags=["Threads"]
+)
 
 
-@thread_router.get("/threads/{thread_id}", response_model=ThreadResponse)
-def get_thread(thread_id: UUID, db: Session = Depends(get_db)):
-    repository = ThreadRepository(db)
-    service = ThreadService(repository)
-    return service.get_thread_by_id(thread_id)
-
-
-@thread_router.get("/threads", response_model=ThreadsListResponse)
-def get_all_threads(
+@thread_router.get("", status_code=status.HTTP_200_OK, response_model=ThreadsListResponse)
+async def get_threads(
     email: Optional[str] = None,
     application: Optional[str] = None,
     skip: int = 0,
-    limit: int = 10,
-    db: Session = Depends(get_db)
+    limit: int = 10
 ):
-    repository = ThreadRepository(db)
-    service = ThreadService(repository)
-    return service.get_all_threads(email=email, application=application, skip=skip, limit=limit)
+    return await thread_service.get_all_threads(
+        email=email,
+        application=application,
+        skip=skip,
+        limit=limit
+    )
+
+
+@thread_router.get("/{thread_id}", status_code=status.HTTP_200_OK, response_model=ThreadResponse)
+async def get_thread_details(thread_id: UUID):
+    return await thread_service.get_thread_by_id(thread_id)
+
+
+@thread_router.delete("/{thread_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_thread(thread_id: UUID):
+    await thread_service.delete_thread_by_id(thread_id)
+    return None
