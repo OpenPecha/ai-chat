@@ -2,8 +2,11 @@ from uuid import UUID
 from typing import Optional, List, Dict, Any
 from fastapi import HTTPException
 from starlette import status
+import logging
 
 from chat_api.db.db import SessionLocal
+
+logger = logging.getLogger(__name__)
 from chat_api.threads.thread_repository import ThreadRepository
 from chat_api.threads.thread_response_model import ThreadResponse, Message, SearchResult, ThreadListResponse, ResponseError
 from chat_api.threads.thread_enums import MessageRole
@@ -48,8 +51,9 @@ async def get_thread_by_id(thread_id: UUID) -> ThreadResponse:
                 detail=ResponseError(error=BAD_REQUEST, message=THREAD_NOT_FOUND).model_dump()
             )
         
-        messages = transform_chats_to_messages(thread.chats)
-        title = extract_thread_title(thread)
+        sorted_chats = sorted(thread.chats, key=lambda x: x.created_at) if thread.chats else []
+        title = sorted_chats[0].question if sorted_chats else UNTITLED_THREAD
+        messages = transform_chats_to_messages_from_sorted(sorted_chats)
         
         return ThreadResponse(
             id=thread.id,
@@ -79,9 +83,12 @@ def extract_thread_title(thread: Thread) -> str:
 
 
 def transform_chats_to_messages(chats: List[Chat]) -> List[Message]:
-
-    messages = []
     sorted_chats = sorted(chats, key=lambda x: x.created_at)
+    return transform_chats_to_messages_from_sorted(sorted_chats)
+
+
+def transform_chats_to_messages_from_sorted(sorted_chats: List[Chat]) -> List[Message]:
+    messages = []
     
     for chat in sorted_chats:
         user_message = Message(
@@ -97,6 +104,7 @@ def transform_chats_to_messages(chats: List[Chat]) -> List[Message]:
         elif isinstance(chat.response, dict):
             answer, search_results = parse_dict_response(chat.response)
         else:
+            logger.warning(f"Invalid response format for chat {chat.id}: {type(chat.response)}")
             continue
         
         assistant_message = Message(
