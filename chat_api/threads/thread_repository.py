@@ -42,3 +42,14 @@ class ThreadRepository:
         )
         
         return threads, total
+
+    def soft_delete_thread(self, thread_id: UUID) -> bool:
+        thread = self.db.query(Thread).filter(
+            Thread.id == thread_id
+        ).first()
+        
+        if thread:
+            thread.is_deleted = True
+            self.db.commit()
+            return True
+        return False
