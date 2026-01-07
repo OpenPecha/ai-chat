@@ -9,7 +9,7 @@ from chat_api.threads.thread_response_model import ThreadResponse, Message, Sear
 from chat_api.threads.thread_enums import MessageRole
 from chat_api.threads.models import Thread
 from chat_api.chats.models import Chat
-from chat_api.response_message import THREAD_NOT_FOUND, BAD_REQUEST
+from chat_api.response_message import THREAD_NOT_FOUND, BAD_REQUEST, UNTITLED_THREAD
 
 
 async def get_all_threads(
@@ -75,7 +75,7 @@ def extract_thread_title(thread: Thread) -> str:
     if thread.chats:
         first_chat = min(thread.chats, key=lambda chat: chat.created_at)
         return first_chat.question
-    return "Untitled Thread"
+    return UNTITLED_THREAD
 
 
 def transform_chats_to_messages(chats: List[Chat]) -> List[Message]:
