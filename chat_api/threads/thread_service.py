@@ -5,9 +5,10 @@ from starlette import status
 
 from chat_api.db.db import SessionLocal
 from chat_api.threads.thread_repository import ThreadRepository
-from chat_api.threads.thread_response_model import ThreadResponse, Message, SearchResult, ThreadListResponse
+from chat_api.threads.thread_response_model import ThreadResponse, Message, SearchResult, ThreadListResponse, ResponseError
 from chat_api.threads.models import Thread
 from chat_api.chats.models import Chat
+from chat_api.response_message import THREAD_NOT_FOUND, BAD_REQUEST
 
 
 async def get_all_threads(
@@ -43,7 +44,7 @@ async def get_thread_by_id(thread_id: UUID) -> ThreadResponse:
         if not thread:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Thread not found"
+                detail=ResponseError(error=BAD_REQUEST, message=THREAD_NOT_FOUND).model_dump()
             )
         
         messages = transform_chats_to_messages(thread.chats)
@@ -63,7 +64,8 @@ async def delete_thread_by_id(thread_id: UUID) -> None:
         
         if not deleted:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=ResponseError(error=BAD_REQUEST, message=THREAD_NOT_FOUND).model_dump()
             )
 
 

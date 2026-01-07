@@ -45,3 +45,11 @@ class ThreadListResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ResponseError(BaseModel):
+    error: str
+    message: str
+
+    class Config:
+        from_attributes = True
