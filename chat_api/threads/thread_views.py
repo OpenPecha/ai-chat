@@ -1,10 +1,9 @@
 from fastapi import APIRouter
 from uuid import UUID
-from typing import Optional
 from starlette import status
 
 from chat_api.threads import thread_service
-from chat_api.threads.thread_response_model import ThreadResponse, ThreadsListResponse
+from chat_api.threads.thread_response_model import ThreadResponse, ThreadListResponse
 
 thread_router = APIRouter(
     prefix="/threads",
@@ -12,10 +11,10 @@ thread_router = APIRouter(
 )
 
 
-@thread_router.get("", status_code=status.HTTP_200_OK, response_model=ThreadsListResponse)
+@thread_router.get("", status_code=status.HTTP_200_OK, response_model=ThreadListResponse)
 async def get_threads(
-    email: Optional[str] = None,
-    application: Optional[str] = None,
+    email: str,
+    application: str,
     skip: int = 0,
     limit: int = 10
 ):

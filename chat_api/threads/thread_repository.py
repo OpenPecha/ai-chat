@@ -18,20 +18,17 @@ class ThreadRepository:
         )
     
     def get_threads(
-        self, 
-        email: Optional[str] = None, 
-        application: Optional[str] = None,
+        self,
+        email: str,
+        application: str,
         skip: int = 0, 
         limit: int = 10
     ) -> Tuple[List[Thread], int]:
 
-        query = self.db.query(Thread).filter(Thread.is_deleted == False)
-        
-        if email:
-            query = query.filter(Thread.email == email)
-        
-        if application:
-            query = query.join(Thread.application).filter(Thread.application.has(name=application))
+        query = self.db.query(Thread).filter(
+            Thread.is_deleted == False,
+            Thread.email == email
+        ).join(Thread.application).filter(Thread.application.has(name=application))
         
         total = query.count()
         

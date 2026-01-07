@@ -11,8 +11,8 @@ from chat_api.chats.models import Chat
 
 
 async def get_all_threads(
-    email: Optional[str] = None, 
-    application: Optional[str] = None,
+    email: str,
+    application: str,
     skip: int = 0, 
     limit: int = 10
 ) -> ThreadListResponse:
