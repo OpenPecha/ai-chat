@@ -54,13 +54,8 @@ def get_threads(
     return threads, total
 
 
-def soft_delete_thread(db: Session, thread_id: UUID) -> bool:
-    thread = db.query(Thread).filter(
-        Thread.id == thread_id
-    ).first()
-    
-    if thread:
-        thread.is_deleted = True
-        db.commit()
-        return True
-    return False
+def update_thread(db: Session, thread: Thread) -> Thread:
+    db.add(thread)
+    db.commit()
+    db.refresh(thread)
+    return thread

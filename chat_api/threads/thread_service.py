@@ -73,13 +73,16 @@ async def get_thread_by_id(thread_id: UUID) -> ThreadResponse:
 async def delete_thread_by_id(thread_id: UUID) -> None:
 
     with SessionLocal() as db:
-        deleted_thread = thread_repository.soft_delete_thread(db, thread_id)
+        thread = thread_repository.get_thread_by_id(db, thread_id)
         
-        if not deleted_thread:
+        if not thread:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=ResponseError(error=BAD_REQUEST, message=THREAD_NOT_FOUND).model_dump()
             )
+        
+        thread.is_deleted = True
+        thread_repository.update_thread(db, thread)
 
 def extract_thread_title(thread: Thread) -> str:
 
