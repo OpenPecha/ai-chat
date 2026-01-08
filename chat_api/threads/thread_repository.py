@@ -3,6 +3,20 @@ from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Tuple
 
 from chat_api.threads.models import Thread
+from chat_api.threads.threads_request_model import ThreadCreateRequest
+
+
+def create_thread(db: Session, application_id: UUID, thread_request: ThreadCreateRequest) -> Thread:
+
+    thread = Thread(
+        email=thread_request.email,
+        device_type=thread_request.device_type,
+        application_id=application_id
+    )
+    db.add(thread)
+    db.commit()
+    db.refresh(thread)
+    return thread
 
 
 def get_thread_by_id(db: Session, thread_id: UUID) -> Optional[Thread]:

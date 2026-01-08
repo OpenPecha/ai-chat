@@ -11,7 +11,7 @@ from chat_api.chats.models import Chat
 from chat_api.db import SessionLocal
 from chat_api.chats.chats_repository import save_chat
 
-from chat_api.threads.threads_services import create_thread
+from chat_api.threads.thread_service import create_thread
 from chat_api.threads.threads_request_model import ThreadCreateRequest
 
 def merge_token_items(chat_list: list) -> list:

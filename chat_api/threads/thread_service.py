@@ -13,6 +13,17 @@ from chat_api.threads.thread_enums import MessageRole
 from chat_api.threads.models import Thread
 from chat_api.chats.models import Chat
 from chat_api.response_message import THREAD_NOT_FOUND, BAD_REQUEST, UNTITLED_THREAD
+from chat_api.threads.threads_request_model import ThreadCreateRequest
+from chat_api.applications.applications_services import get_application_by_name_service
+
+
+def create_thread(thread_request: ThreadCreateRequest) -> ThreadResponse:
+    with SessionLocal() as db_session:
+        application = get_application_by_name_service(db_session, name=thread_request.application_name)
+        if application is None:
+            raise HTTPException(status_code=404, detail="Application not found")
+        thread = thread_repository.create_thread(db_session, application_id=application.id, thread_request=thread_request)
+        return thread
 
 
 async def get_all_threads(
