@@ -16,7 +16,9 @@ def validate_token(token: str) -> Dict[str, Any]:
 
 
 def decode_backend_token(token: str) -> Dict[str, Any]:
-
+    claims = jwt.get_unverified_claims(token)
+    logging.info(f"Token audience: {claims.get('aud')}, Expected: {get('JWT_AUD')}")
+    
     return jwt.decode(
         token, 
         get("JWT_SECRET_KEY"), 
