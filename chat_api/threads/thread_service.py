@@ -7,12 +7,23 @@ import logging
 from chat_api.db.db import SessionLocal
 
 logger = logging.getLogger(__name__)
-from chat_api.threads.thread_repository import ThreadRepository
+from chat_api.threads import thread_repository
 from chat_api.threads.thread_response_model import ThreadResponse, Message, SearchResult, ThreadListResponse, ResponseError
 from chat_api.threads.thread_enums import MessageRole
 from chat_api.threads.models import Thread
 from chat_api.chats.models import Chat
 from chat_api.response_message import THREAD_NOT_FOUND, BAD_REQUEST, UNTITLED_THREAD
+from chat_api.threads.threads_request_model import ThreadCreateRequest
+from chat_api.applications.applications_services import get_application_by_name_service
+
+
+def create_thread(thread_request: ThreadCreateRequest) -> ThreadResponse:
+    with SessionLocal() as db_session:
+        application = get_application_by_name_service(db_session, name=thread_request.application_name)
+        if application is None:
+            raise HTTPException(status_code=404, detail="Application not found")
+        thread = thread_repository.create_thread(db_session, application_id=application.id, thread_request=thread_request)
+        return thread
 
 
 async def get_all_threads(
@@ -23,8 +34,7 @@ async def get_all_threads(
 ) -> ThreadListResponse:
 
     with SessionLocal() as db:
-        repository = ThreadRepository(db)
-        threads, total = repository.get_threads(email, application, skip, limit)
+        threads, total = thread_repository.get_threads(db, email, application, skip, limit)
         
         thread_data = []
         for thread in threads:
@@ -42,8 +52,7 @@ async def get_all_threads(
 async def get_thread_by_id(thread_id: UUID) -> ThreadResponse:
 
     with SessionLocal() as db:
-        repository = ThreadRepository(db)
-        thread = repository.get_thread_by_id(thread_id)
+        thread = thread_repository.get_thread_by_id(db, thread_id)
         
         if not thread:
             raise HTTPException(
@@ -64,10 +73,9 @@ async def get_thread_by_id(thread_id: UUID) -> ThreadResponse:
 async def delete_thread_by_id(thread_id: UUID) -> None:
 
     with SessionLocal() as db:
-        repository = ThreadRepository(db)
-        deleted = repository.soft_delete_thread(thread_id)
+        rows_updated = thread_repository.delete_thread_by_id(db, thread_id)
         
-        if not deleted:
+        if rows_updated == 0:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=ResponseError(error=BAD_REQUEST, message=THREAD_NOT_FOUND).model_dump()
