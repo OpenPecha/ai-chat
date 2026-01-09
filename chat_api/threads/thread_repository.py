@@ -59,3 +59,13 @@ def update_thread(db: Session, thread: Thread) -> Thread:
     db.commit()
     db.refresh(thread)
     return thread
+
+
+def delete_thread_by_id(db: Session, thread_id: UUID) -> int:
+    rows_updated = (
+        db.query(Thread)
+        .filter(Thread.id == thread_id, Thread.is_deleted == False)
+        .update({"is_deleted": True})
+    )
+    db.commit()
+    return rows_updated
