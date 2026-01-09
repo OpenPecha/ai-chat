@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 from uuid import UUID
 
+from chat_api.threads.thread_enums import MessageRole
+
 
 class SearchResult(BaseModel):
     id: str
@@ -13,7 +15,7 @@ class SearchResult(BaseModel):
 
 
 class Message(BaseModel):
-    role: str
+    role: MessageRole
     content: str
     id: UUID
     searchResults: Optional[List[SearchResult]] = None
@@ -42,6 +44,14 @@ class ThreadSummary(BaseModel):
 class ThreadListResponse(BaseModel):
     data: List[ThreadSummary]
     total: int
+
+    class Config:
+        from_attributes = True
+
+
+class ResponseError(BaseModel):
+    error: str
+    message: str
 
     class Config:
         from_attributes = True

@@ -18,10 +18,10 @@ psycopg2-binary = "^2.9.9"
 python-jose = "^3.3.0"
 passlib = "^1.7.4"
 requests = "^2.32.3"
+httpx = "^0.28.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
-httpx = "^0.28.1"
 ruff = "^0.8.4"
 
 [tool.ruff]

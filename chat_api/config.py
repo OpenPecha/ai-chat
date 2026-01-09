@@ -14,6 +14,8 @@ DEFAULTS = dict(
     
     DOMAIN_NAME="dev-pecha-esukhai.us.auth0.com",
     CLIENT_ID="", 
+    OPENPECHA_AI_URL="https://buddhist-consensus.onrender.com/api/chat/stream",
+    MAX_QUERY_LENGTH=2000
 )
 
 
