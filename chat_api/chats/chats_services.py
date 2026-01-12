@@ -37,7 +37,7 @@ def merge_token_items(chat_list: list) -> list:
     return merged_data
 
 async def get_chat_stream(token: str, chat_request: ChatRequest):
-    get_user_email_from_token(token)
+    email = get_user_email_from_token(token)
 
     user_query = ChatUserQuery(role="user", content=chat_request.query)
     chat_request_payload = chatRequestPayload(messages=[user_query]).model_dump()
@@ -54,7 +54,7 @@ async def get_chat_stream(token: str, chat_request: ChatRequest):
         
             if len(chat_list) > 0:
                 if chat_request.thread_id is None:
-                    thread_request = ThreadCreateRequest(email=chat_request.email, device_type=chat_request.device_type, application_name=chat_request.application)
+                    thread_request = ThreadCreateRequest(email=email, device_type=chat_request.device_type, application_name=chat_request.application)
                     thread = create_thread(thread_request=thread_request)
 
                 thread_id = chat_request.thread_id if chat_request.thread_id else thread.id
