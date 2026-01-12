@@ -18,14 +18,12 @@ thread_router = APIRouter(
 @thread_router.get("", status_code=status.HTTP_200_OK, response_model=ThreadListResponse)
 async def get_threads(
     authentication_credential: Annotated[HTTPAuthorizationCredentials, Depends(oauth2_scheme)],
-    email: str,
     application: str,
     skip: int = 0,
     limit: int = 10
 ):
     return await thread_service.get_all_threads(
         token=authentication_credential.credentials,
-        email=email,
         application=application,
         skip=skip,
         limit=limit

@@ -29,12 +29,11 @@ def create_thread(thread_request: ThreadCreateRequest) -> ThreadResponse:
 
 async def get_all_threads(
     token: str,
-    email: str,
     application: str,
     skip: int = 0, 
     limit: int = 10
 ) -> ThreadListResponse:
-    get_user_email_from_token(token)
+    email = get_user_email_from_token(token)
     
     with SessionLocal() as db:
         threads, total = thread_repository.get_threads(db, email, application, skip, limit)
