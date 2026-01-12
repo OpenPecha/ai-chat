@@ -127,11 +127,18 @@ def test_get_chat_stream_creates_thread_and_persists_chat(
 @patch("chat_api.chats.chats_services.save_chat")
 @patch("chat_api.chats.chats_services.SessionLocal")
 @patch("chat_api.chats.chats_services.create_thread")
+@patch("chat_api.chats.chats_services.get_thread_by_id")
 @patch("chat_api.chats.chats_services.httpx.AsyncClient")
 def test_get_chat_stream_uses_existing_thread_id(
-    mock_async_client, mock_create_thread, mock_sessionlocal, mock_save_chat
+    mock_async_client, mock_get_thread_by_id, mock_create_thread, mock_sessionlocal, mock_save_chat
 ) -> None:
     existing_thread_id = str(uuid4())
+    mock_get_thread_by_id.return_value = MagicMock(
+        messages=[
+            MagicMock(role="user", content="previous question"),
+            MagicMock(role="assistant", content="previous answer"),
+        ]
+    )
 
     stream_response = MagicMock()
 
@@ -170,8 +177,18 @@ def test_get_chat_stream_uses_existing_thread_id(
 
     # Should not create a new thread
     mock_create_thread.assert_not_called()
+    mock_get_thread_by_id.assert_awaited_once()
     mock_save_chat.assert_called_once()
     assert any(existing_thread_id.encode("utf-8") in c for c in chunks)
+
+    # Should use previous thread messages (not just current query) as the outbound payload
+    _, _, call_kwargs = client_instance.stream.mock_calls[0]
+    assert call_kwargs["json"] == {
+        "messages": [
+            {"role": "user", "content": "previous question"},
+            {"role": "assistant", "content": "previous answer"},
+        ]
+    }
 
 
 @patch("chat_api.chats.chats_services.save_chat")
