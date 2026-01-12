@@ -13,6 +13,7 @@ from chat_api.chats.chats_repository import save_chat
 
 from chat_api.threads.thread_service import create_thread
 from chat_api.threads.threads_request_model import ThreadCreateRequest
+from chat_api.auth_utils import get_user_email_from_token
 
 def merge_token_items(chat_list: list) -> list:
     merged_data = []
@@ -35,7 +36,8 @@ def merge_token_items(chat_list: list) -> list:
     
     return merged_data
 
-async def get_chat_stream(chat_request: ChatRequest):
+async def get_chat_stream(token: str, chat_request: ChatRequest):
+    get_user_email_from_token(token)
 
     user_query = ChatUserQuery(role="user", content=chat_request.query)
     chat_request_payload = chatRequestPayload(messages=[user_query]).model_dump()
