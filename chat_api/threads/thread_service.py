@@ -12,6 +12,7 @@ from chat_api.threads.thread_response_model import ThreadResponse, Message, Sear
 from chat_api.threads.thread_enums import MessageRole
 from chat_api.threads.models import Thread
 from chat_api.chats.models import Chat
+from chat_api.auth_utils import get_user_email_from_token
 from chat_api.response_message import THREAD_NOT_FOUND, BAD_REQUEST, UNTITLED_THREAD
 from chat_api.threads.threads_request_model import ThreadCreateRequest
 from chat_api.applications.applications_services import get_application_by_name_service
@@ -27,12 +28,13 @@ def create_thread(thread_request: ThreadCreateRequest) -> ThreadResponse:
 
 
 async def get_all_threads(
-    email: str,
+    token: str,
     application: str,
     skip: int = 0, 
     limit: int = 10
 ) -> ThreadListResponse:
-
+    email = get_user_email_from_token(token)
+    
     with SessionLocal() as db:
         threads, total = thread_repository.get_threads(db, email, application, skip, limit)
         
@@ -49,8 +51,9 @@ async def get_all_threads(
             total=total
         )
 
-async def get_thread_by_id(thread_id: UUID) -> ThreadResponse:
-
+async def get_thread_by_id(token: str, thread_id: UUID) -> ThreadResponse:
+    get_user_email_from_token(token)
+    
     with SessionLocal() as db:
         thread = thread_repository.get_thread_by_id(db, thread_id)
         
@@ -70,8 +73,9 @@ async def get_thread_by_id(thread_id: UUID) -> ThreadResponse:
             messages=messages
         )
 
-async def delete_thread_by_id(thread_id: UUID) -> None:
-
+async def delete_thread_by_id(token: str, thread_id: UUID) -> None:
+    get_user_email_from_token(token)
+    
     with SessionLocal() as db:
         rows_updated = thread_repository.delete_thread_by_id(db, thread_id)
         

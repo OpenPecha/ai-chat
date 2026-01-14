@@ -3,7 +3,6 @@ from typing import List, Optional
 from uuid import UUID
 
 class ChatRequest(BaseModel):
-    email: str
     query: str
     application: str
     device_type: str
