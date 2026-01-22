@@ -5,7 +5,12 @@ from chat_api.threads.thread_views import thread_router
 from chat_api.chats.chats_views import chats_router
 from chat_api.applications.application_views import applications_router
 
-api = FastAPI(title="ai-chat")
+api = FastAPI(
+    title="ai-chat",
+    description="AI Chat API for Pecha applications",
+    root_path="/api/v1",
+    redoc_url="/docs"
+)
 api.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
