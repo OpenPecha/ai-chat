@@ -6,6 +6,7 @@ from typing import Optional
 from chat_api.chats.chats_reponse_model import ChatRequest, ChatUserQuery, chatRequestPayload, ChatResponsePayload
 from chat_api.error_contant import ErrorConstant,ResponseError
 from fastapi import HTTPException
+from chat_api.threads.thread_response_model import ThreadResponse
 
 from chat_api.chats.models import Chat
 from chat_api.db import SessionLocal
@@ -13,6 +14,10 @@ from chat_api.chats.chats_repository import save_chat
 
 from chat_api.threads.thread_service import create_thread
 from chat_api.threads.threads_request_model import ThreadCreateRequest
+
+from chat_api.threads.thread_service import get_thread_by_id
+
+
 from chat_api.auth_utils import get_user_email_from_token
 
 def merge_token_items(chat_list: list) -> list:
@@ -39,8 +44,13 @@ def merge_token_items(chat_list: list) -> list:
 async def get_chat_stream(token: str, chat_request: ChatRequest):
     email = get_user_email_from_token(token)
 
-    user_query = ChatUserQuery(role="user", content=chat_request.query)
-    chat_request_payload = chatRequestPayload(messages=[user_query]).model_dump()
+    if chat_request.thread_id is not None:
+        thread: ThreadResponse = await get_thread_by_id(chat_request.thread_id)
+        user_query_payload = get_previous_chats(thread)
+    else:
+        user_query_payload = chatRequestPayload(messages=[ChatUserQuery(role="user", content=chat_request.query)])
+
+    chat_request_payload = user_query_payload.model_dump()
     url = get("OPENPECHA_AI_URL")
     chat_list = []
     
@@ -86,3 +96,8 @@ def sse_frame_from_line(
     on_json(json.loads(payload))
     return (f"data: {payload}\n\n").encode("utf-8")
     
+def get_previous_chats(thread: ThreadResponse) -> chatRequestPayload:
+    messages = thread.messages
+    messages = [ChatUserQuery(role=message.role, content=message.content) for message in messages]
+    chat_request_payload = chatRequestPayload(messages=messages)
+    return chat_request_payload
