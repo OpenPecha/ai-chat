@@ -38,6 +38,7 @@ def merge_token_items(chat_list: list) -> list:
     
     if done_item:
         merged_data.append(done_item)
+    print("merge data >>>>>>>>>>>>>", merged_data)
     
     return merged_data
 
@@ -56,6 +57,12 @@ async def get_chat_stream(token: str, chat_request: ChatRequest):
     
     async with httpx.AsyncClient(timeout=httpx.Timeout(60.0, read=120.0)) as client:
         async with client.stream("POST", url, json=chat_request_payload) as response:
+            if chat_request.thread_id is None:
+                thread_request = ThreadCreateRequest(email=chat_request.email, device_type=chat_request.device_type, application_name=chat_request.application)
+                thread = create_thread(thread_request=thread_request)
+                yield (
+                    f"data: {json.dumps({'thread_id': str(thread.id)})}\n\n"
+                ).encode("utf-8")
             # Stream the response chunks
             async for line in response.aiter_lines():
                 frame = sse_frame_from_line(line, on_json=chat_list.append)
@@ -63,6 +70,7 @@ async def get_chat_stream(token: str, chat_request: ChatRequest):
                     yield frame    
         
             if len(chat_list) > 0:
+
                 if chat_request.thread_id is None:
                     thread_request = ThreadCreateRequest(email=email, device_type=chat_request.device_type, application_name=chat_request.application)
                     thread = create_thread(thread_request=thread_request)
@@ -73,9 +81,6 @@ async def get_chat_stream(token: str, chat_request: ChatRequest):
                     response_payload = ChatResponsePayload(thread_id=thread_id, response=merged_chat_list, question=chat_request.query)
                     save_chat(db_session, response_payload=response_payload)
 
-        yield (
-            f"data: {json.dumps({'thread_id': str(thread_id)})}\n\n"
-        ).encode("utf-8")
 
 def sse_frame_from_line(
     line: str,
