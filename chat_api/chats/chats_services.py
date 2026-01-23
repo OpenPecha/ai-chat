@@ -11,8 +11,9 @@ from chat_api.chats.models import Chat
 from chat_api.db import SessionLocal
 from chat_api.chats.chats_repository import save_chat
 
-from chat_api.threads.threads_services import create_thread
+from chat_api.threads.thread_service import create_thread
 from chat_api.threads.threads_request_model import ThreadCreateRequest
+from chat_api.auth_utils import get_user_email_from_token
 
 def merge_token_items(chat_list: list) -> list:
     merged_data = []
@@ -36,7 +37,8 @@ def merge_token_items(chat_list: list) -> list:
     
     return merged_data
 
-async def get_chat_stream(chat_request: ChatRequest):
+async def get_chat_stream(token: str, chat_request: ChatRequest):
+    email = get_user_email_from_token(token)
 
     user_query = ChatUserQuery(role="user", content=chat_request.query)
     chat_request_payload = chatRequestPayload(messages=[user_query]).model_dump()
@@ -58,6 +60,11 @@ async def get_chat_stream(chat_request: ChatRequest):
                     yield frame    
         
             if len(chat_list) > 0:
+
+                if chat_request.thread_id is None:
+                    thread_request = ThreadCreateRequest(email=email, device_type=chat_request.device_type, application_name=chat_request.application)
+                    thread = create_thread(thread_request=thread_request)
+
                 thread_id = chat_request.thread_id if chat_request.thread_id else thread.id
                 with SessionLocal() as db_session:
                     merged_chat_list = merge_token_items(chat_list)

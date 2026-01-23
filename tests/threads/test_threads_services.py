@@ -7,8 +7,7 @@ from fastapi import HTTPException, status
 
 from chat_api.threads.models import DeviceType
 from chat_api.threads.threads_request_model import ThreadCreateRequest
-from chat_api.threads.threads_services import create_thread
-from chat_api.threads.thread_service import ThreadService
+from chat_api.threads.thread_service import create_thread, ThreadService
 from chat_api.threads.thread_repository import ThreadRepository
 
 
@@ -19,9 +18,9 @@ def _sessionlocal_cm(session):
     return cm
 
 
-@patch("chat_api.threads.threads_services.create_thread_repo")
-@patch("chat_api.threads.threads_services.get_application_by_name_service")
-@patch("chat_api.threads.threads_services.SessionLocal")
+@patch("chat_api.threads.thread_service.thread_repository.create_thread")
+@patch("chat_api.threads.thread_service.get_application_by_name_service")
+@patch("chat_api.threads.thread_service.SessionLocal")
 def test_create_thread_success(
     mock_sessionlocal, mock_get_application_by_name_service, mock_create_thread_repo
 ) -> None:
@@ -53,9 +52,9 @@ def test_create_thread_success(
     )
 
 
-@patch("chat_api.threads.threads_services.create_thread_repo")
-@patch("chat_api.threads.threads_services.get_application_by_name_service")
-@patch("chat_api.threads.threads_services.SessionLocal")
+@patch("chat_api.threads.thread_service.thread_repository.create_thread")
+@patch("chat_api.threads.thread_service.get_application_by_name_service")
+@patch("chat_api.threads.thread_service.SessionLocal")
 def test_create_thread_application_not_found(
     mock_sessionlocal, mock_get_application_by_name_service, mock_create_thread_repo
 ) -> None:
