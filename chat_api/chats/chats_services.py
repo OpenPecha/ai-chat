@@ -4,7 +4,7 @@ import json
 from typing import Optional
 
 from chat_api.chats.chats_reponse_model import ChatRequest, ChatUserQuery, chatRequestPayload, ChatResponsePayload
-from chat_api.error_contant import ErrorConstant,ResponseError
+from chat_api.error_constants import ErrorConstants, ResponseError
 from fastapi import HTTPException
 
 from chat_api.chats.models import Chat

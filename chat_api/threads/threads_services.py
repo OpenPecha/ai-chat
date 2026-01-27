@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
 from chat_api.db import SessionLocal
-from chat_api.error_contant import ErrorConstant, ResponseError
+from chat_api.error_constants import ErrorConstants, ResponseError
 from chat_api.threads.threads_repository import create_thread as create_thread_repo
 from chat_api.threads.threads_request_model import ThreadCreateRequest, ThreadResponse
 from chat_api.applications.applications_services import get_application_by_name_service
