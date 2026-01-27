@@ -30,6 +30,14 @@ def test_sse_frame_from_line_data_line_json() -> None:
     assert collected == [{"x": 1}]
 
 
+def test_sse_frame_from_line_without_data_prefix() -> None:
+    """Test that lines without 'data:' prefix are still parsed as JSON."""
+    collected = []
+    frame = sse_frame_from_line('{"type": "token", "data": "test"}', on_json=collected.append)
+    assert frame == b'data: {"type": "token", "data": "test"}\n\n'
+    assert collected == [{"type": "token", "data": "test"}]
+
+
 def test_merge_token_items_merges_all_tokens() -> None:
     chat_list = [
         {"type": "token", "data": "Hello"},
@@ -69,6 +77,23 @@ def test_merge_token_items_handles_no_tokens() -> None:
     assert len(result) == 2
     assert result[0] == {"type": "search_results", "data": []}
     assert result[1] == {"type": "done", "data": {}}
+
+
+def test_merge_token_items_done_item_always_last() -> None:
+    """Test that done item is always placed at the end after merged tokens."""
+    chat_list = [
+        {"type": "token", "data": "First"},
+        {"type": "done", "data": {}},
+        {"type": "token", "data": " Second"},
+        {"type": "other", "data": "something"},
+        {"type": "token", "data": " Third"},
+    ]
+    result = merge_token_items(chat_list)
+    # Should have: other item, merged tokens, done item
+    assert len(result) == 3
+    assert result[0] == {"type": "other", "data": "something"}
+    assert result[1] == {"data": "First Second Third", "type": "token"}
+    assert result[2] == {"type": "done", "data": {}}
 
 
 @patch("chat_api.chats.chats_services.save_chat")
@@ -117,8 +142,15 @@ def test_get_chat_stream_creates_thread_and_persists_chat(
 
     chunks = asyncio.run(_collect())
 
-    # Final chunk should include the thread_id that was created
+    # Thread ID should be yielded when creating a new thread
+    assert any(b"thread_id" in c for c in chunks)
     assert any(str(thread_id).encode("utf-8") in c for c in chunks)
+    
+    # Verify the first chunk contains the thread_id
+    first_chunk = chunks[0].decode("utf-8")
+    assert "thread_id" in first_chunk
+    assert str(thread_id) in first_chunk
+    
     mock_create_thread.assert_called_once()
     mock_sessionlocal.assert_called_once()
     mock_save_chat.assert_called_once()
@@ -127,11 +159,18 @@ def test_get_chat_stream_creates_thread_and_persists_chat(
 @patch("chat_api.chats.chats_services.save_chat")
 @patch("chat_api.chats.chats_services.SessionLocal")
 @patch("chat_api.chats.chats_services.create_thread")
+@patch("chat_api.chats.chats_services.get_thread_by_id")
 @patch("chat_api.chats.chats_services.httpx.AsyncClient")
 def test_get_chat_stream_uses_existing_thread_id(
-    mock_async_client, mock_create_thread, mock_sessionlocal, mock_save_chat
+    mock_async_client, mock_get_thread_by_id, mock_create_thread, mock_sessionlocal, mock_save_chat
 ) -> None:
     existing_thread_id = str(uuid4())
+    mock_get_thread_by_id.return_value = MagicMock(
+        messages=[
+            MagicMock(role="user", content="previous question"),
+            MagicMock(role="assistant", content="previous answer"),
+        ]
+    )
 
     stream_response = MagicMock()
 
@@ -170,8 +209,24 @@ def test_get_chat_stream_uses_existing_thread_id(
 
     # Should not create a new thread
     mock_create_thread.assert_not_called()
+    mock_get_thread_by_id.assert_awaited_once()
     mock_save_chat.assert_called_once()
-    assert any(existing_thread_id.encode("utf-8") in c for c in chunks)
+    # Thread ID should NOT be in chunks when using existing thread (only yielded for new threads)
+    assert not any(b"thread_id" in c for c in chunks)
+    
+    # Verify save_chat was called with the existing thread_id
+    call_args = mock_save_chat.call_args
+    response_payload = call_args[1]["response_payload"]
+    assert str(response_payload.thread_id) == existing_thread_id
+
+    # Should use previous thread messages (not just current query) as the outbound payload
+    _, _, call_kwargs = client_instance.stream.mock_calls[0]
+    assert call_kwargs["json"] == {
+        "messages": [
+            {"role": "user", "content": "previous question"},
+            {"role": "assistant", "content": "previous answer"},
+        ]
+    }
 
 
 @patch("chat_api.chats.chats_services.save_chat")
@@ -232,8 +287,12 @@ def test_get_chat_stream_merges_tokens_before_saving(
     # Check that the response has merged tokens
     assert len(response_payload.response) == 3  # search_results, merged token, done
     assert response_payload.response[0]["type"] == "search_results"
-    assert response_payload.response[1]["type"] == "token"
     assert response_payload.response[1]["data"] == "Hello world!"  # Merged
+    assert response_payload.response[1]["type"] == "token"
     assert response_payload.response[2]["type"] == "done"
+    
+    # Verify thread_id and question are correctly set
+    assert response_payload.thread_id == thread_id
+    assert response_payload.question == "hi"
 
 

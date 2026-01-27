@@ -7,9 +7,8 @@ from fastapi import HTTPException, status
 
 from chat_api.threads.models import DeviceType
 from chat_api.threads.thread_request_models import ThreadCreateRequest
-from chat_api.threads.threads_services import create_thread
-from chat_api.threads.thread_service import ThreadService
-from chat_api.threads.thread_repository import ThreadRepository
+from chat_api.threads.thread_enums import MessageRole
+from chat_api.threads.thread_service import create_thread, transform_chats_to_messages
 
 
 def _sessionlocal_cm(session):
@@ -19,9 +18,9 @@ def _sessionlocal_cm(session):
     return cm
 
 
-@patch("chat_api.threads.threads_services.create_thread_repo")
-@patch("chat_api.threads.threads_services.get_application_by_name_service")
-@patch("chat_api.threads.threads_services.SessionLocal")
+@patch("chat_api.threads.thread_service.thread_repository.create_thread")
+@patch("chat_api.threads.thread_service.get_application_by_name_service")
+@patch("chat_api.threads.thread_service.SessionLocal")
 def test_create_thread_success(
     mock_sessionlocal, mock_get_application_by_name_service, mock_create_thread_repo
 ) -> None:
@@ -53,9 +52,9 @@ def test_create_thread_success(
     )
 
 
-@patch("chat_api.threads.threads_services.create_thread_repo")
-@patch("chat_api.threads.threads_services.get_application_by_name_service")
-@patch("chat_api.threads.threads_services.SessionLocal")
+@patch("chat_api.threads.thread_service.thread_repository.create_thread")
+@patch("chat_api.threads.thread_service.get_application_by_name_service")
+@patch("chat_api.threads.thread_service.SessionLocal")
 def test_create_thread_application_not_found(
     mock_sessionlocal, mock_get_application_by_name_service, mock_create_thread_repo
 ) -> None:
@@ -79,9 +78,6 @@ def test_create_thread_application_not_found(
 
 def test_transform_chats_to_messages_with_new_format() -> None:
     """Test transform_chats_to_messages with new list-based response format."""
-    mock_repository = MagicMock(spec=ThreadRepository)
-    service = ThreadService(mock_repository)
-    
     chat_id = uuid4()
     mock_chat = MagicMock()
     mock_chat.id = chat_id
@@ -113,18 +109,18 @@ def test_transform_chats_to_messages_with_new_format() -> None:
         }
     ]
     
-    messages = service.transform_chats_to_messages([mock_chat])
+    messages = transform_chats_to_messages([mock_chat])
     
     assert len(messages) == 2  # user message + assistant message
     
     # Check user message
-    assert messages[0].role == "user"
+    assert messages[0].role == MessageRole.USER
     assert messages[0].content == "what is emptiness"
     assert messages[0].id == chat_id
     assert messages[0].searchResults is None
     
     # Check assistant message
-    assert messages[1].role == "assistant"
+    assert messages[1].role == MessageRole.ASSISTANT
     assert messages[1].content == "Emptiness refers to the lack of inherent existence."
     assert messages[1].id == chat_id
     assert messages[1].searchResults is not None
@@ -136,9 +132,6 @@ def test_transform_chats_to_messages_with_new_format() -> None:
 
 def test_transform_chats_to_messages_with_old_format() -> None:
     """Test transform_chats_to_messages with old dict-based response format for backward compatibility."""
-    mock_repository = MagicMock(spec=ThreadRepository)
-    service = ThreadService(mock_repository)
-    
     chat_id = uuid4()
     mock_chat = MagicMock()
     mock_chat.id = chat_id
@@ -155,7 +148,7 @@ def test_transform_chats_to_messages_with_old_format() -> None:
         ]
     }
     
-    messages = service.transform_chats_to_messages([mock_chat])
+    messages = transform_chats_to_messages([mock_chat])
     
     assert len(messages) == 2
     assert messages[1].content == "test answer"
@@ -166,9 +159,6 @@ def test_transform_chats_to_messages_with_old_format() -> None:
 
 def test_transform_chats_to_messages_no_search_results() -> None:
     """Test transform_chats_to_messages when there are no search results."""
-    mock_repository = MagicMock(spec=ThreadRepository)
-    service = ThreadService(mock_repository)
-    
     chat_id = uuid4()
     mock_chat = MagicMock()
     mock_chat.id = chat_id
@@ -185,7 +175,7 @@ def test_transform_chats_to_messages_no_search_results() -> None:
         }
     ]
     
-    messages = service.transform_chats_to_messages([mock_chat])
+    messages = transform_chats_to_messages([mock_chat])
     
     assert len(messages) == 2
     assert messages[1].content == "Simple answer"
