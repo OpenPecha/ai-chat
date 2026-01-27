@@ -14,7 +14,7 @@ from chat_api.threads.models import Thread
 from chat_api.chats.models import Chat
 from chat_api.auth_utils import get_user_email_from_token
 from chat_api.response_message import THREAD_NOT_FOUND, BAD_REQUEST, UNTITLED_THREAD
-from chat_api.threads.threads_request_model import ThreadCreateRequest
+from chat_api.threads.thread_request_models import ThreadCreateRequest
 from chat_api.applications.applications_services import get_application_by_name_service
 
 

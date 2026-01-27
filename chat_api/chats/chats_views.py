@@ -5,10 +5,10 @@ from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from chat_api.chats.chats_services import get_chat_stream
-from chat_api.chats.chats_reponse_model import ChatRequest
+from chat_api.chats.chats_response_models import ChatRequest
 from chat_api.config import get
 from fastapi import HTTPException
-from chat_api.error_contant import ErrorConstant, ResponseError
+from chat_api.error_constants import ErrorConstants, ResponseError
 
 oauth2_scheme = HTTPBearer()
 
@@ -24,7 +24,7 @@ def get_chats(
 
     max_query_length = get("MAX_QUERY_LENGTH")
     if len(chat_request.query) > int(max_query_length):
-        raise HTTPException(status_code=400, detail=ResponseError(error=ErrorConstant.BAD_REQUEST, message=ErrorConstant.MAX_QUERY_LENGTH_ERROR).model_dump())
+        raise HTTPException(status_code=400, detail=ResponseError(error=ErrorConstants.BAD_REQUEST, message=ErrorConstants.MAX_QUERY_LENGTH_ERROR).model_dump())
     
     return StreamingResponse(
         get_chat_stream(token=authentication_credential.credentials, chat_request=chat_request),

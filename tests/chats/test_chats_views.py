@@ -4,7 +4,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 from chat_api.app import api
-from chat_api.error_contant import ErrorConstant
+from chat_api.error_constants import ErrorConstants
 
 client = TestClient(api)
 
@@ -23,8 +23,8 @@ def test_get_chats_rejects_long_query(mock_get) -> None:
     resp = client.post("/chats", json=payload)
 
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
-    assert resp.json()["detail"]["error"] == ErrorConstant.BAD_REQUEST
-    assert resp.json()["detail"]["message"] == ErrorConstant.MAX_QUERY_LENGTH_ERROR
+    assert resp.json()["detail"]["error"] == ErrorConstants.BAD_REQUEST
+    assert resp.json()["detail"]["message"] == ErrorConstants.MAX_QUERY_LENGTH_ERROR
 
 
 @patch("chat_api.chats.chats_views.get_chat_stream")

@@ -3,7 +3,7 @@ from chat_api.applications.models import Application
 from fastapi import HTTPException
 from chat_api.db import SessionLocal
 
-from chat_api.applications.applications_response_models import ApplicationCreateRequest
+from chat_api.applications.application_response_models import ApplicationCreateRequest
 
 def get_application_by_name_service(db: SessionLocal(), name: str) -> Application:
 
