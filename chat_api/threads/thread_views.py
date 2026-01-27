@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from uuid import UUID
 from sqlalchemy.orm import Session
 
-from chat_api.db.db import SessionLocal
+from chat_api.db.database import SessionLocal
 from chat_api.threads.thread_repository import ThreadRepository
 from chat_api.threads.thread_service import ThreadService
 from chat_api.threads.thread_response_model import ThreadResponse

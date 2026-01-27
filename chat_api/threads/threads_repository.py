@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 
 from chat_api.threads.models import Thread
-from chat_api.threads.threads_request_model import ThreadCreateRequest, ThreadCreatePayload
+from chat_api.threads.thread_request_models import ThreadCreateRequest, ThreadCreatePayload
 
 def create_thread(db: Session, application_id: UUID, thread_request: ThreadCreateRequest) -> Thread:
 

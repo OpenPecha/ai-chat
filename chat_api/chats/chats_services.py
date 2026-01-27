@@ -3,7 +3,7 @@ import httpx
 import json
 from typing import Optional
 
-from chat_api.chats.chats_reponse_model import ChatRequest, ChatUserQuery, chatRequestPayload, ChatResponsePayload
+from chat_api.chats.chats_response_models import ChatRequest, ChatUserQuery, chatRequestPayload, ChatResponsePayload
 from chat_api.error_constants import ErrorConstants, ResponseError
 from fastapi import HTTPException
 
@@ -12,7 +12,7 @@ from chat_api.db import SessionLocal
 from chat_api.chats.chats_repository import save_chat
 
 from chat_api.threads.threads_services import create_thread
-from chat_api.threads.threads_request_model import ThreadCreateRequest
+from chat_api.threads.thread_request_models import ThreadCreateRequest
 
 def merge_token_items(chat_list: list) -> list:
     merged_data = []

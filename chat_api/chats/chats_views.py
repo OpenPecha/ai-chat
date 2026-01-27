@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from chat_api.chats.chats_services import get_chat_stream
-from chat_api.chats.chats_reponse_model import ChatRequest
+from chat_api.chats.chats_response_models import ChatRequest
 from chat_api.config import get
 from fastapi import HTTPException
 from chat_api.error_constants import ErrorConstants, ResponseError

@@ -1,5 +1,5 @@
 from chat_api.chats.models import Chat
-from chat_api.chats.chats_reponse_model import ChatResponsePayload
+from chat_api.chats.chats_response_models import ChatResponsePayload
 from sqlalchemy.orm import Session
 
 def save_chat(db: Session, response_payload: ChatResponsePayload):

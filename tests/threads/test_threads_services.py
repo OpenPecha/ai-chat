@@ -6,7 +6,7 @@ import pytest
 from fastapi import HTTPException, status
 
 from chat_api.threads.models import DeviceType
-from chat_api.threads.threads_request_model import ThreadCreateRequest
+from chat_api.threads.thread_request_models import ThreadCreateRequest
 from chat_api.threads.threads_services import create_thread
 from chat_api.threads.thread_service import ThreadService
 from chat_api.threads.thread_repository import ThreadRepository

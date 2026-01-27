@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from chat_api.applications.applications_response_models import ApplicationCreateRequest, ApplicationResponse
+from chat_api.applications.application_response_models import ApplicationCreateRequest, ApplicationResponse
 from chat_api.applications.applications_services import create_application_service
 
 router = APIRouter()
