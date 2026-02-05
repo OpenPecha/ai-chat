@@ -58,7 +58,7 @@ async def get_chat_stream(token: str, chat_request: ChatRequest):
     async with httpx.AsyncClient(timeout=httpx.Timeout(60.0, read=120.0)) as client:
         async with client.stream("POST", url, json=chat_request_payload) as response:
             if chat_request.thread_id is None:
-                thread_request = ThreadCreateRequest(email=chat_request.email, device_type=chat_request.device_type, application_name=chat_request.application)
+                thread_request = ThreadCreateRequest(email=email, device_type=chat_request.device_type, application_name=chat_request.application)
                 thread = create_thread(thread_request=thread_request)
                 yield (
                     f"data: {json.dumps({'thread_id': str(thread.id)})}\n\n"
@@ -70,10 +70,6 @@ async def get_chat_stream(token: str, chat_request: ChatRequest):
                     yield frame    
         
             if len(chat_list) > 0:
-
-                if chat_request.thread_id is None:
-                    thread_request = ThreadCreateRequest(email=email, device_type=chat_request.device_type, application_name=chat_request.application)
-                    thread = create_thread(thread_request=thread_request)
 
                 thread_id = chat_request.thread_id if chat_request.thread_id else thread.id
                 with SessionLocal() as db_session:
