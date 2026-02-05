@@ -46,7 +46,7 @@ async def get_chat_stream(token: str, chat_request: ChatRequest):
     email = get_user_email_from_token(token)
 
     if chat_request.thread_id is not None:
-        thread: ThreadResponse = await get_thread_by_id(chat_request.thread_id)
+        thread: ThreadResponse = await get_thread_by_id(token, chat_request.thread_id)
         user_query_payload = get_previous_chats(thread)
     else:
         user_query_payload = chatRequestPayload(messages=[ChatUserQuery(role="user", content=chat_request.query)])
