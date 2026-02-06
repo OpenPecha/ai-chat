@@ -12,3 +12,4 @@ build/
 .env
 
 
+local_setup/data/database-chat-local/
