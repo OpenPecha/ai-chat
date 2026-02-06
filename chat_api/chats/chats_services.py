@@ -47,7 +47,7 @@ async def get_chat_stream(token: str, chat_request: ChatRequest):
 
     if chat_request.thread_id is not None:
         thread: ThreadResponse = await get_thread_by_id(token, chat_request.thread_id)
-        user_query_payload = get_previous_chats(thread)
+        user_query_payload = get_previous_chats(thread, chat_request.query)
     else:
         user_query_payload = chatRequestPayload(messages=[ChatUserQuery(role="user", content=chat_request.query)])
 
@@ -97,8 +97,10 @@ def sse_frame_from_line(
     on_json(json.loads(payload))
     return (f"data: {payload}\n\n").encode("utf-8")
     
-def get_previous_chats(thread: ThreadResponse) -> chatRequestPayload:
+def get_previous_chats(thread: ThreadResponse, current_query: str) -> chatRequestPayload:
     messages = thread.messages
     messages = [ChatUserQuery(role=message.role, content=message.content) for message in messages]
+    # Append the current user query to the message history
+    messages.append(ChatUserQuery(role="user", content=current_query))
     chat_request_payload = chatRequestPayload(messages=messages)
     return chat_request_payload
